@@ -95,8 +95,9 @@ char advance(Parser *p) {
 }
 
 char advanceN(Parser *p) {
-    p->pos++;
-    return p->source[p->pos];
+    int dummy = p->pos;
+    dummy++;
+    return p->source[dummy];
 }
 
 void skip_whitespace(Parser *p) {
@@ -144,7 +145,7 @@ int64_t parse_number(Parser *p) {
 int64_t parse_char(Parser *p) {
 
     char c;
-    const char *s1 = p->source + (p->pos + 1);
+    const char *s1 = p->source + (p->pos+2);
     if (peek(p) >= 33 && peek(p) <= 126 && strlen(s1) == 1) {
        c = peek(p); 
        return (int64_t) c;
@@ -162,8 +163,8 @@ int64_t parse_char(Parser *p) {
 }
 
 int64_t parse_bool(Parser *p) {
-    //advance(p);
-    char c = peek(p);
+
+    char c = advanceN(p);
     printf("bool: %c\n", c);
     if (c == 't') {
         return 0;

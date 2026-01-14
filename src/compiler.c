@@ -11,20 +11,30 @@
 //struct RetData ret_struct = {0};
 SchemeParseRet *parsed_expr;
 struct TypeData *listUnrolled_expr;
+Int64_Array code_array;
 //int64_t *code;
 
 int main(void) {
     //const char *scheme_expr = "#\\newline";
     //const char *scheme_expr = " 42";
-    //const char *scheme_expr = "#t";
-    const char *scheme_expr = "()";
+    const char *scheme_expr = "#t";
+    //const char *scheme_expr = "()";
 
     //scheme_parse(scheme_expr);
     //trim_str(scheme_expr);
     //listUnrolled_expr = calloc(1, sizeof(TypeData))
+
+    code_array = initializeInt64_arr();
     parsed_expr = calloc(1, sizeof(SchemeParseRet));
     Parser p = new_parser(scheme_expr);
     Compiler(scheme_parse(&p));
+    // Write to file
+    FILE *fptr = fopen("test.scm", "w");
+    if (fptr == NULL) {
+        printf("File could not be created\n");
+        return -1;
+    } 
+    fwrite(code_array.code, sizeof(int64_t), code_array.size, fptr);
 
 }
 
@@ -67,7 +77,7 @@ SchemeParseRet *scheme_parse(Parser *p) {
 
 void Compiler(SchemeParseRet *parsed) {
 
-    Int64_Array code_array = initializeInt64_arr();
+
     int64_t tag_num;
 
     switch (parsed->ret_tag) {
@@ -90,7 +100,7 @@ void Compiler(SchemeParseRet *parsed) {
             // tag the value
             tag_num = tagBool(parsed->retstruct.bools);
             add_element(&code_array, tag_num);
-            printf("Checking the result: %d\n", code_array.code[1] >> 7);
+            printf("Checking the result: %d\n", code_array.code[1]);
             break;
         case MT_LIST:
             add_element(&code_array, LOAD64);
@@ -101,5 +111,4 @@ void Compiler(SchemeParseRet *parsed) {
         default:
             break;
     }
-
 }
