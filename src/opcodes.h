@@ -1,8 +1,8 @@
 #ifndef OPCODES_DEF_H 
 #define OPCODES_DEF_H
 
-#define LOAD64 0x1
-#define RETURN 0x2
+#define LEG 0x1E6
+#define ZEG 0x2E6
 
 
 #endif

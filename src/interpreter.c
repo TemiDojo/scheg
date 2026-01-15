@@ -7,14 +7,12 @@
 #include "opcodes.h"
 #include "types.h"
 #include "interpreter.h"
+#include <inttypes.h>
 
 
 // global ptr
-int64_t code;
-FILE *fp;
 
 int main(void) {
-
 
     fp = fopen("test.scm", "r");
     if (fp == NULL) {
@@ -22,31 +20,42 @@ int main(void) {
         return -1;
     }   
     // Now create a virtual stack to push data
+    stack = initializeInt64_arr();
 
-    fread(&code, sizeof(int64_t), 1, fp);
+    codes_read = fread(&code, sizeof(int64_t), 1, fp);
+    printf("%d\n", codes_read);
     interpret();
-
-
-
+    visualize_stack();
+    fclose(fp);
 }
 
 void interpret() {
-    printf("in the interpreter");
+    puts("in the interpreter");
 
     while (true) {
         switch (code) {
-            case LOAD64:
-                printf("loading 64");
+            case LEG:
+                puts("loading 64");
+                read_word();
+                push(code);
                 break;
+            case ZEG:
             default:
                 break;
         }
-        break;
+        puts("in here");
+        if (ftell(fp) == SEEK_END) {
+            puts("yayy");
+            break;
+        }
     } 
 }
 
 void read_word() {
-
-    fread(&code, sizeof(int64_t), 1, fp);
-
+    codes_read = fread(&code, sizeof(int64_t), 1, fp);
+    printf("%d\n", codes_read);
+    printf("%ld", ftell(fp));
+    if (ftell(fp) == SEEK_END) {
+        puts("Yayyy");
+    }
 }

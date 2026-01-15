@@ -35,6 +35,10 @@ int main(void) {
         return -1;
     } 
     fwrite(code_array.code, sizeof(int64_t), code_array.size, fptr);
+    free(code_array.code);
+    free(parsed_expr);
+
+    fclose(fptr);
 
 }
 
@@ -82,28 +86,28 @@ void Compiler(SchemeParseRet *parsed) {
 
     switch (parsed->ret_tag) {
         case INTEGER: // integer
-            add_element(&code_array, LOAD64);
+            add_element(&code_array, LEG);
             // tag the value
             tag_num = tagInt(parsed->retstruct.integer);
             add_element(&code_array, tag_num);
             printf("Checking the result: %d\n", code_array.code[1]);
             break;
         case CHARS: // characters
-            add_element(&code_array, LOAD64);
+            add_element(&code_array, LEG);
             // tag the value
             tag_num = tagChar(parsed->retstruct.character);
             add_element(&code_array, tag_num);
             printf("Checking the result: %d", code_array.code[1]);
             break;
         case BOOLS: // booleans
-            add_element(&code_array, LOAD64);
+            add_element(&code_array, LEG);
             // tag the value
             tag_num = tagBool(parsed->retstruct.bools);
             add_element(&code_array, tag_num);
             printf("Checking the result: %d\n", code_array.code[1]);
             break;
         case MT_LIST:
-            add_element(&code_array, LOAD64);
+            add_element(&code_array, LEG);
             int64_t mask_num = parsed->retstruct.mt_list;
             add_element(&code_array, mask_num);
             printf("Checking the result: %d\n", code_array.code[1]);
