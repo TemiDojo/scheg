@@ -7,7 +7,7 @@ typedef struct {
 
 // multitype struct for the expanded expression
 union MultiType {
-    int integer;                    // 0
+    int64_t integer;                    // 0
     char *str;                      // 1
 };
 
@@ -24,7 +24,7 @@ union Ret {
     int64_t character;              // 1
     int64_t bools;                  // 2
     int64_t mt_list;                // 3
-    struct TypeData *list_ret;
+    struct TypeData *list_ret;      // 4
 };
 
 //
@@ -49,6 +49,7 @@ Parser new_parser(const char *source);
 SchemeParseRet *scheme_parse(Parser *p);
 struct TypeData *Parse(const char *scheme_expr);
 void skip_whitespace(Parser *p);
+void unroll_expr();
 char peek(Parser *p);
 char advance(Parser *p);
 char advanceN(Parser *p);
@@ -113,7 +114,7 @@ void skip_whitespace(Parser *p) {
 
 int64_t parse_number(Parser *p) {
     
-    int result = 0;
+    int64_t result = 0;
     bool neg = false;
     if (peek(p) == '-') {
         neg = true;
@@ -178,6 +179,14 @@ int64_t parse_bool(Parser *p) {
 
 
 void parse_expr(Parser *p) {
+   char *expr;
+   memcpy(&expr, p->source, p->length);
+   unroll_expr(&expr);
+
+}
+
+void unroll_expr() {
+
 
 
 }

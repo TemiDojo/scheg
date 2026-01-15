@@ -4,5 +4,8 @@
 #define LEG 0x1E6
 #define ZEG 0x2E6
 
+// unary primitives
+#define NEG1
+#define AEG1
 
 #endif

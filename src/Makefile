@@ -12,4 +12,4 @@ interpret: interpreter.c
 	$(CC) $^ $(CFLAGS) $@
 
 clean:
-	rm -f compile *scm interpret
+	rm -f compile *scm interpret *.out

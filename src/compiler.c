@@ -16,8 +16,8 @@ Int64_Array code_array;
 
 int main(void) {
     //const char *scheme_expr = "#\\newline";
-    //const char *scheme_expr = " 42";
-    const char *scheme_expr = "#t";
+    const char *scheme_expr = " 42";
+    //const char *scheme_expr = "#t";
     //const char *scheme_expr = "()";
 
     //scheme_parse(scheme_expr);
@@ -72,7 +72,7 @@ SchemeParseRet *scheme_parse(Parser *p) {
     } else if (c == '(') {      // list expr
         listUnrolled_expr = calloc(1, sizeof(struct TypeData));
         parsed_expr->retstruct.list_ret = listUnrolled_expr;
-        parse_expr(p);
+        parse_expr(p); // TODO:
     }
 
     return parsed_expr;

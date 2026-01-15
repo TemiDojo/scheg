@@ -22,40 +22,35 @@ int main(void) {
     // Now create a virtual stack to push data
     stack = initializeInt64_arr();
 
-    codes_read = fread(&code, sizeof(int64_t), 1, fp);
-    printf("%d\n", codes_read);
+    codes_read = fread(&instr, sizeof(int64_t), 1, fp);
     interpret();
     visualize_stack();
     fclose(fp);
 }
 
 void interpret() {
-    puts("in the interpreter");
 
+    bool stop = false;
     while (true) {
-        switch (code) {
+        switch (instr) {
             case LEG:
-                puts("loading 64");
                 read_word();
-                push(code);
+                push(data);
                 break;
             case ZEG:
+                stop = true;
             default:
                 break;
         }
-        puts("in here");
-        if (ftell(fp) == SEEK_END) {
-            puts("yayy");
-            break;
-        }
+        if (stop) break;
     } 
 }
 
 void read_word() {
-    codes_read = fread(&code, sizeof(int64_t), 1, fp);
-    printf("%d\n", codes_read);
-    printf("%ld", ftell(fp));
-    if (ftell(fp) == SEEK_END) {
-        puts("Yayyy");
+    codes_read = fread(&data, sizeof(int64_t), 1, fp);
+    if (getc(fp) == EOF) {
+        instr = (int64_t) ZEG;
+    } else {
+        fseek(fp, -1, SEEK_CUR);
     }
 }

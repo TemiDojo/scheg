@@ -9,7 +9,8 @@
 
 
 
-int64_t code;
+int64_t data;
+int64_t instr;
 FILE *fp;
 size_t codes_read;
 Int64_Array stack;
