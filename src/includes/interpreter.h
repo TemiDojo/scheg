@@ -19,6 +19,7 @@ Int64_Array stack;
 
 void interpret();
 void read_word();
+int64_t get_instr();
 void push(int64_t data);
 void pop();
 
@@ -26,6 +27,9 @@ void pop();
 
 void push(int64_t data) {
     add_element(&stack, data);
+}
+
+void pop() {
 }
 
 
