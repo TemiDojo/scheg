@@ -5,7 +5,7 @@
 #include <ctype.h>
 #include "./includes/compiler.h"
 #include "./includes/opcodes.h"
-#include "./includes/types.h"
+#include "./includes/global_helper.h"
 #include "./includes/interpreter.h"
 #include <inttypes.h>
 
@@ -41,8 +41,25 @@ void interpret() {
                 break;
             case AEG1:
                 puts("in add1");
-                
                 //exit(1);
+                break;
+            case SEG1:
+                puts("in sub1");
+                break;
+            case CEG:
+                puts("in ceg");
+                break;
+            case IEG:
+                puts("in ieg");
+                break;
+            case NEG:
+                puts("in neg");
+                break;
+            case sIEG:
+                puts("in sieg");
+                break;
+            case sBEG:
+                puts("in sbeg");
                 break;
             case ZEG:
                 puts("in zeg");
