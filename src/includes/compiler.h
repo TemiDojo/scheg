@@ -42,9 +42,12 @@ struct Expr {
 };
 
 // Struct for the environment variable
+struct Val {
+    char *symbol;
+    int64_t stack_location;
+};
 typedef struct {
-    char **symbol;  
-    int64_t *stack_location; 
+    struct Val *val;
     size_t count;
     size_t capacity;
 
@@ -55,30 +58,86 @@ Int64_Array code_array;
 /*
  *  Function Declaration
  */
-void Compiler(Expr *parsed);
+void Compiler(Expr *parsed, Env *env);
 // Unary Primitives
-void compile_list(Expr *list);
-void compile_add1(Expr *list);
-void compile_sub1(Expr *list);
-void compile_int2char(Expr *list);
-void compile_char2int(Expr *list);
-void compile_nullp(Expr *list);
-void compile_zerop(Expr *list);
-void compile_not(Expr *list);
-void compile_intp(Expr *list);
-void compile_boolp(Expr *list);
+void compile_list(Expr *list, Env *env);
+void compile_add1(Expr *list, Env *env);
+void compile_sub1(Expr *list, Env *env);
+void compile_int2char(Expr *list, Env *env);
+void compile_char2int(Expr *list, Env *env);
+void compile_nullp(Expr *list, Env *env);
+void compile_zerop(Expr *list, Env *env);
+void compile_not(Expr *list, Env *env);
+void compile_intp(Expr *list, Env *env);
+void compile_boolp(Expr *list, Env *env);
 // Binary Primitives
-void compile_add(Expr *list);
-void compile_mul(Expr *list);
-void compile_sub(Expr *list);
-void compile_le(Expr *list);
-void compile_eq(Expr *list);
+void compile_add(Expr *list, Env *env);
+void compile_mul(Expr *list, Env *env);
+void compile_sub(Expr *list, Env *env);
+void compile_le(Expr *list, Env *env);
+void compile_eq(Expr *list, Env *env);
 // Local variables
-void compile_let(Expr *list);
+void compile_let(Expr *list, Env *env);
+// Env
+Env initializeEnv();
+void add_binding(Env *env, char *symbol, int64_t stack_location);
+int64_t lookup(Env *env, char *symbol);
 // Helper
 void add_to_list(ExprList *list, Expr *item);
 void display_parsed_list(Expr *parsed);
 
+
+Env initializeEnv() {
+    Env env;
+    env.count = 0;
+    env.capacity = 8;
+    env.val = calloc(code_array.capacity, sizeof(struct Val));
+    env.val[env.count].stack_location = 0;
+    return env;
+}
+
+void add_binding(Env *env, char *symbol, int64_t stack_location) {
+    if (env->count >= env->capacity) {
+        env->capacity *= 2;
+        env->val = realloc(env->val, env->capacity * sizeof(struct Val));
+        if (env->val == NULL) {
+            printf("Error: allocation failure\n");
+            exit(1);
+        }
+    }
+
+    const char *s1 = symbol;
+    int64_t stack_pos = lookup(env, symbol);
+
+    if (stack_pos != -1) {
+        printf("Error: duplicate identifier\n");
+        exit(1);
+    }
+
+    env->val[env->count].symbol = calloc(strlen(symbol)+1, sizeof(char));
+    if (env->val[env->count].symbol == NULL) {
+        printf("Error: allocation failure\n");
+        exit(1);
+    }
+    strcpy(env->val[env->count].symbol, s1);
+    env->val[env->count].stack_location = ++stack_location;
+    env->count++;
+}
+
+int64_t lookup(Env *env, char *symbol) {
+
+    const char *s1 = symbol;
+
+    for (size_t i = 0; i < env->count; i++) {
+        const char *s2 = env->val[i].symbol;
+        if (strcmp(s1, s2) == 0) {
+            return env->val[i].stack_location;
+        }
+
+    }
+    return -1;
+
+}
 
 
 

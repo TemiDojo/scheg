@@ -38,7 +38,16 @@ void interpret() {
                 puts("in keg");
                 read_word();
                 push(data);
-                //read_word();
+                break;
+            case KLEG:
+                puts("in kleg");
+                read_word();
+                printf("stack pos: %ld\n", data);
+                break;
+            case DEG:
+                puts("in deg");
+                read_word();
+                printf("stack index to pop: %ld\n", data);
                 break;
             // Unary Primitives
             case AEG1:
