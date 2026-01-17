@@ -33,15 +33,16 @@ void interpret() {
     bool stop = false;
     while (true) {
         switch (get_instr()) {
-            case LEG:
-                puts("in leg");
+            // Load Instr
+            case KEG:
+                puts("in keg");
                 read_word();
                 push(data);
                 //read_word();
                 break;
+            // Unary Primitives
             case AEG1:
                 puts("in add1");
-                //exit(1);
                 break;
             case SEG1:
                 puts("in sub1");
@@ -63,6 +64,25 @@ void interpret() {
                 break;
             case ZEG:
                 puts("in zeg");
+                break;
+            // Binary instr
+            case SEG:
+                puts("in -");
+                break;
+            case AEG:
+                puts("in +");
+                break;
+            case MEG:
+                puts("in *");
+                break;
+            case LEG:
+                puts("in <");
+                break;
+            case EEG:
+                puts("in =");
+                break;
+            case RET:
+                puts("in ret");
                 stop = true;
             default:
                 puts("default");
@@ -80,7 +100,7 @@ void read_word() {
 int64_t get_instr() {
 
     if (getc(fp) == EOF) {
-        instr = (int64_t) ZEG;
+        instr = (int64_t) RET;
     } else {
         fseek(fp, -1, SEEK_CUR);
     }

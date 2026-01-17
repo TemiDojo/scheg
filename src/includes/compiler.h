@@ -9,6 +9,7 @@
 #include <ctype.h>
 #include "global_helper.h"
 #include "opcodes.h"
+
 // forward declaration
 typedef struct Expr Expr;
 
@@ -40,12 +41,22 @@ struct Expr {
     } as;
 };
 
+// Struct for the environment variable
+typedef struct {
+    char **symbol;  
+    int64_t *stack_location; 
+    size_t count;
+    size_t capacity;
+
+} Env;
+
 Int64_Array code_array;
 
 /*
  *  Function Declaration
  */
 void Compiler(Expr *parsed);
+// Unary Primitives
 void compile_list(Expr *list);
 void compile_add1(Expr *list);
 void compile_sub1(Expr *list);
@@ -56,24 +67,20 @@ void compile_zerop(Expr *list);
 void compile_not(Expr *list);
 void compile_intp(Expr *list);
 void compile_boolp(Expr *list);
+// Binary Primitives
+void compile_add(Expr *list);
+void compile_mul(Expr *list);
+void compile_sub(Expr *list);
+void compile_le(Expr *list);
+void compile_eq(Expr *list);
+// Local variables
+void compile_let(Expr *list);
+// Helper
 void add_to_list(ExprList *list, Expr *item);
 void display_parsed_list(Expr *parsed);
 
 
 
-
-void compile_add1(Expr *list) {
-    if (list->as.list.count != 2) {
-        printf("Error: add1 expects 1 argument\n");
-        return;
-    }
-    puts("in the add1 comiler");
-    Expr *arg = list->as.list.items[1];
-    Compiler(arg);
-
-    add_element(&code_array, AEG1);
-
-}
 
 /*
  * HELPER functions for the Expr array

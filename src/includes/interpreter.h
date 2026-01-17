@@ -1,4 +1,10 @@
+#ifndef INTERPRETER_H
+#define INTERPRETER_H
+
 #include <inttypes.h>
+#include <stdio.h>
+#include <stddef.h>
+#include "global_helper.h"
 
 
 
@@ -42,3 +48,5 @@ void visualize_stack() {
     printf(BOX_BOTTOM " <- rsp\n");
 
 }
+
+#endif

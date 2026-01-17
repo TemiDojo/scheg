@@ -5,10 +5,10 @@ CFLAGS= -Wall -g -o
 all: compile interpret
 
 
-compile: compiler.c ./includes/compiler.h ./includes/global_helper.h ./includes/parser.h
+compile: compiler.c ./includes/compiler.h ./includes/global_helper.h ./includes/parser.h ./includes/opcodes.h
 	$(CC) $^ $(CFLAGS) $@
 
-interpret: interpreter.c
+interpret: interpreter.c ./includes/interpreter.h ./includes/global_helper.h
 	$(CC) $^ $(CFLAGS) $@
 
 clean:
