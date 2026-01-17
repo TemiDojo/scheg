@@ -5,6 +5,7 @@
 #define KLEG    0x2E
 #define RET     0x3E
 #define DEG     0x4E
+#define LLEG    0x5E
 
 // unary primitives
 #define SEG1    0x2E5

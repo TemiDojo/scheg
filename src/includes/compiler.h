@@ -54,6 +54,8 @@ typedef struct {
 } Env;
 
 Int64_Array code_array;
+int64_t global_stackPos;
+int64_t stack_pointer;
 
 /*
  *  Function Declaration
@@ -92,7 +94,7 @@ Env initializeEnv() {
     env.count = 0;
     env.capacity = 8;
     env.val = calloc(code_array.capacity, sizeof(struct Val));
-    env.val[env.count].stack_location = 0;
+    //env.val[env.count].stack_location = 0;
     return env;
 }
 
@@ -120,7 +122,7 @@ void add_binding(Env *env, char *symbol, int64_t stack_location) {
         exit(1);
     }
     strcpy(env->val[env->count].symbol, s1);
-    env->val[env->count].stack_location = ++stack_location;
+    env->val[env->count].stack_location = stack_location;
     env->count++;
 }
 

@@ -19,6 +19,7 @@ int64_t data;
 int64_t instr;
 FILE *fp;
 size_t codes_read;
+//size_t stack_rsp;
 Int64_Array stack;
 
 
@@ -26,16 +27,24 @@ Int64_Array stack;
 void interpret();
 void read_word();
 int64_t get_instr();
-void push(int64_t data);
-void pop();
+void push(int64_t data, size_t *stack_rsp);
+void pop(size_t i, size_t *stack_rsp);
 
 
 
-void push(int64_t data) {
+void push(int64_t data, size_t *stack_rsp) {
     add_element(&stack, data);
+    //size_t dummy = *stack_rsp;
+    ++*stack_rsp;
 }
 
-void pop() {
+void pop(size_t i, size_t *stack_rsp) {
+    *stack_rsp-=i;
+    stack.size-=i;
+}
+
+int64_t get(size_t index) {
+    return stack.code[index];
 }
 
 

@@ -19,16 +19,18 @@ int main(void) {
     //const char *scheme_expr = "#t";
     //const char *scheme_expr = "()";
     //const char *scheme_expr = "(add1 2)";
+    const char *scheme_expr = "(sub1 4)";
     //const char *scheme_expr = "(+ a b)";
     //const char *scheme_expr = "(add1 (sub1 (integer->char 50)))";
     //const char *scheme_expr = "(+ 1 (add1 (- 4 2)))";
-    const char *scheme_expr = "(let ((a 2)(b 3)) (let ((a 1)(b 2)) a) (+ a b))";
+    //const char *scheme_expr = "(let ((a 2)(b 3)) (let ((a 1)(b 2)) a) (- 2 3) (let ((a 1)(b 2)) a))";
+    //const char *scheme_expr = "(let ((a 2) (b 3)) (+ 2 3) (let ((b 4)) (* b 2)))";
     //const char *scheme_expr = "(+ 1 (add1 (- 4 2)) 2)";
     //const char *scheme_expr = "(let ((a 0) (b 1)) (- a b)()) (- 1 2)";
     //const char *scheme_expr = "()";
 
 
-
+    global_stackPos = -1;
     code_array = initializeInt64_arr();
     Parser p = new_parser(scheme_expr);
     Expr *parsed = scheme_parse(&p);
@@ -97,6 +99,8 @@ void Compiler(Expr *parsed, Env *env) {
             // tag the value
             tag_num = tagInt(parsed->as.int_val);
             add_element(&code_array, tag_num);
+            stack_pointer++;
+            global_stackPos++;
             break;
         case EXPR_CHAR: // characters
             add_element(&code_array, KEG);
@@ -114,6 +118,8 @@ void Compiler(Expr *parsed, Env *env) {
             int64_t stack_pos = lookup(env, parsed->as.symbol);
             add_element(&code_array, KLEG);
             add_element(&code_array, stack_pos);
+            stack_pointer++;
+            //global_stackPos++;
             break;
         case EXPR_LIST:
             compile_list(parsed, env);
@@ -176,18 +182,9 @@ void compile_list(Expr *list, Env *env) {
     } else if(strcmp(op_name, "let") == 0) {
         Env envnew = initializeEnv();
         compile_let(list, &envnew);
-        // emit instruction to pop off the env values of the stack
-        // after the end of a let scope
-        for(size_t i = 0; i < envnew.count; i++) {
-            add_element(&code_array, DEG);
-            int64_t pop_index = envnew.val[i].stack_location;
-            add_element(&code_array, pop_index);
-        }
     } else {
         printf("Error: unknown operator '%s'\n", op_name);
     }
-
-
 }
 
 /*
@@ -321,7 +318,14 @@ void compile_add(Expr *list, Env *env) {
 
     Expr *arg2 = list->as.list.items[1];
     Compiler(arg2, env);
-
+    
+    /*
+    if (env->count > 0) {
+        add_element(&code_array, LLEG);
+        printf("wtf: %ld\n", env->val[env->count - 1].stack_location);
+        add_element(&code_array, env->val[env->count - 1].stack_location);
+    }*/
+    
     add_element(&code_array, AEG);
 }
 
@@ -389,7 +393,7 @@ void compile_let(Expr *list, Env *env) {
         Expr *arg = arg1->as.list.items[i]->as.list.items[1];
         Compiler(arg, env);
         //
-        add_binding(env, arg1->as.list.items[i]->as.list.items[0]->as.symbol, (int64_t) i);
+        add_binding(env, arg1->as.list.items[i]->as.list.items[0]->as.symbol, global_stackPos);
     }
    // free(env);
    for(size_t i = 2; i < list->as.list.count; i++) {
