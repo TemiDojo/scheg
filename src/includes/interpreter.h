@@ -29,16 +29,19 @@ void read_word();
 int64_t get_instr();
 void push(int64_t data, size_t *stack_rsp);
 void pop(size_t i, size_t *stack_rsp);
+void visualize_stack();
 
 
 
 void push(int64_t data, size_t *stack_rsp) {
     add_element(&stack, data);
     //size_t dummy = *stack_rsp;
+    //visualize_stack();
     ++*stack_rsp;
 }
 
 void pop(size_t i, size_t *stack_rsp) {
+    //visualize_stack();
     *stack_rsp-=i;
     stack.size-=i;
 }

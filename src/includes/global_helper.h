@@ -27,6 +27,12 @@ int64_t tagInt(int64_t integer);
 int64_t tagChar(int64_t chars);
 int64_t tagBool(int64_t bools);
 int64_t untagInt(int64_t integer);
+int64_t untagBool(int64_t bools);
+int64_t untagChar(int64_t chars);
+bool isInt(int64_t integer);
+bool isChar(int64_t chars);
+bool isBool(int64_t bools);
+bool isValidType(int64_t val);
 bool is_symbol_char(char c);
 bool is_symbol_start(char c);
 
@@ -53,7 +59,7 @@ bool is_symbol_char(char c) {
 
 
 /*
- * Function to Tag and Untag the types
+ * Functions to Tag types
  */
 int64_t tagInt(int64_t integer) {
     return (integer << 2) | INT_TAG;
@@ -67,9 +73,43 @@ int64_t tagBool(int64_t bools) {
     return (bools << 7) | BOOL_TAG;
 }
 
+
+
+/*
+ * Functions to untag type
+ */
+
 int64_t untagInt(int64_t integer) {
-    return (integer >> 2) | INT_TAG;
+    return (integer >> 2);
 }
+
+int64_t untagChar(int64_t chars) {
+    return (chars >> 8);
+}
+
+int64_t untagBool(int64_t bools) {
+    return (bools >> 7);
+}
+
+/*
+ * Functions to check if valid type
+ */
+bool isInt(int64_t integer) {
+    return (integer & 0b11) == INT_TAG; 
+}
+
+bool isChar(int64_t chars) {
+    return (chars & 0b11111111) == CHAR_TAG;
+}
+
+bool isBool(int64_t bools) {
+    return (bools & 0b1111111) == BOOL_TAG;
+}
+
+bool isValidType(int64_t val) {
+    return isInt(val) || isChar(val) || isBool(val);
+}
+
 
 
 /*
