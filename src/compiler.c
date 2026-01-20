@@ -186,15 +186,18 @@ void Compiler(Expr *parsed, Env *env) {
             break;
         case EXPR_CHAR: // characters
             add_element(&code_array, KEG);
+            puts("in the char");
             // tag the value
             tag_num = tagChar(parsed->as.char_val);
             add_element(&code_array, tag_num);
+            global_stackPos++;
             break;
         case EXPR_BOOL: // booleans
             add_element(&code_array, KEG);
             // tag the value
             tag_num = tagBool(parsed->as.bool_val);
             add_element(&code_array, tag_num);
+            global_stackPos++;
             break;
         case EXPR_SYMBOL:
             int64_t stack_pos = lookup(env, parsed->as.symbol);
@@ -309,6 +312,16 @@ void compile_int2char(Expr *list, Env *env){
     }
     Expr *arg = list->as.list.items[1];
     // check the type in here only compile int
+    if (arg->type == EXPR_SYMBOL) {
+        if (lookup(env, arg->as.symbol) == -1) {
+           printf("Error: variable not bound\n"); 
+           return;
+        }
+    } else if (arg->type != EXPR_INT || arg->type != EXPR_LIST) {
+        printf("Error: int2char expects a int\n");
+        return;
+    }
+
     // or list epxr that will return int
     Compiler(arg, env);
 
@@ -358,7 +371,7 @@ void compile_not(Expr *list, Env *env) {
     Expr *arg = list->as.list.items[1];
     // check the arg type in here, only compile int
     // or list expr that will return int
-    // or a symbol
+    // or a symbol that does exist in the env
     Compiler(arg, env);
 
     add_element(&code_array, NEG);
@@ -491,7 +504,7 @@ void compile_let(Expr *list, Env *env) {
         // evaluate the right most arg
         Expr *arg = arg1->as.list.items[i]->as.list.items[1];
         Compiler(arg, env);
-        //
+        // let should support every type
         add_binding(env, arg1->as.list.items[i]->as.list.items[0]->as.symbol, global_stackPos);
     }
    // free(env);

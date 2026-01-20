@@ -31,8 +31,7 @@ int main(void) {
 void interpret() {
     size_t stack_rsp = 0;
     int64_t ret_index = 0;
-    int64_t env_d
-        ff = 0;
+    int64_t env_diff = 0;
     int64_t res;
     int64_t arg1;
     int64_t arg2;

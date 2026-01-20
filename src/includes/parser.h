@@ -181,13 +181,15 @@ Expr* parse_expr(Parser *p) {
 
     while(1) {
         skip_whitespace(p);
-        if (peek(p) == ')') {
+        if (peek(p) == '\0') {
+            printf("Error: invalid expression, missing ')'");
+            exit(1);
+        } else if (peek(p) == ')') {
             advance(p); // consume ');
             printf("%ld", list_expr->as.list.count);
             if (list_expr->as.list.count == 0) {
                 puts("empty list");
             }
-            puts("closing list expr");
             break;
         }
 
