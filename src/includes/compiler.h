@@ -46,11 +46,12 @@ struct Val {
     char *symbol;
     int64_t stack_location;
 };
-typedef struct {
+
+typedef struct Env {
     struct Val *val;
     size_t count;
     size_t capacity;
-
+    struct Env *parent;  // Now refers to the tagged struct
 } Env;
 
 Int64_Array code_array;
@@ -114,19 +115,17 @@ void add_binding(Env *env, char *symbol, int64_t stack_location) {
     const char *s1 = symbol;
     int64_t stack_pos = lookup(env, symbol);
 
-    if (stack_pos != -1) {
-        printf("Error: duplicate identifier\n");
-        exit(-1);
-    }
 
-    env->val[env->count].symbol = calloc(strlen(symbol)+1, sizeof(char));
-    if (env->val[env->count].symbol == NULL) {
-        printf("Error: allocation failure\n");
-        exit(-1);
+    if (stack_pos == -1 ) {
+        env->val[env->count].symbol = calloc(strlen(symbol)+1, sizeof(char));
+        if (env->val[env->count].symbol == NULL) {
+            printf("Error: allocation failure\n");
+            exit(-1);
+        }
+        strcpy(env->val[env->count].symbol, s1);
+        env->val[env->count].stack_location = stack_location;
+        env->count++;
     }
-    strcpy(env->val[env->count].symbol, s1);
-    env->val[env->count].stack_location = stack_location;
-    env->count++;
 }
 
 int64_t lookup(Env *env, char *symbol) {
@@ -139,6 +138,9 @@ int64_t lookup(Env *env, char *symbol) {
             return env->val[i].stack_location;
         }
 
+    }
+    if(env->parent != NULL) {
+        return lookup(env->parent, symbol);
     }
     return -1;
 

@@ -53,9 +53,9 @@ char peek(Parser *p) {
 }
 
 char advance(Parser *p) {
-    if (p->pos >= p->length) {
-        return '\0';
-    }
+    // if (p->pos >= p->length) {
+    //     return '\0';
+    // }
     return p->source[p->pos++];
 }
 
@@ -176,7 +176,7 @@ Expr* parse_symbol(Parser *p) {
     Expr *list_expr = malloc(sizeof(Expr));
     list_expr->type = EXPR_SYMBOL;
 
-    size_t cap = 10;
+    size_t cap = 16;
     //char *symbol = malloc(64 *sizeof(char));
     list_expr->as.symbol = malloc(cap *sizeof(char));
     if (list_expr->as.symbol == NULL) {
@@ -187,7 +187,7 @@ Expr* parse_symbol(Parser *p) {
     size_t i = 0;
 
     while(c != '\0' && c != ' ' && c != '\n' && c != ')' && c != ';') {
-        if (cap < i) {
+        if (i >= cap - 1) {
             cap = cap * 2;
             list_expr->as.symbol = realloc(list_expr->as.symbol, cap * sizeof(char));
         }

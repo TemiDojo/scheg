@@ -61,21 +61,23 @@ int main(int argc, char **argv) {
 
             // printf("expression to parse: %s\n", p.source + p.pos);
             Expr *parsed = scheme_parse(&p);
+            if (parsed != NULL) {
 
-            display_parsed_list(parsed);
+                display_parsed_list(parsed);
 
-            Env env = initializeEnv();
-            Compiler(parsed, &env);
+                Env env = initializeEnv();
+                Compiler(parsed, &env);
 
-            // emit an instruction after each compiled expression
-            // so we interpreter resets the stack
-            add_element(&code_array, DEG);
+                // emit an instruction after each compiled expression
+                // so we interpreter resets the stack
+                add_element(&code_array, DEG);
 
-            fwrite(code_array.code, sizeof(int64_t), code_array.size, fptr);
-            free(code_array.code);
-            free_env(&env);
-            printf("updated position is: %ld\n", p.pos);
-            free_expr(parsed);
+                fwrite(code_array.code, sizeof(int64_t), code_array.size, fptr);
+                free(code_array.code);
+                free_env(&env);
+                printf("updated position is: %ld\n", p.pos);
+                free_expr(parsed);
+            }
         }
 
 
@@ -95,21 +97,23 @@ int main(int argc, char **argv) {
             Expr *parsed = scheme_parse(&p);
 
             //display_parsed_list(parsed);
+            if (parsed != NULL) {
 
-            Env env = initializeEnv();
-            Compiler(parsed, &env);
+                Env env = initializeEnv();
+                Compiler(parsed, &env);
 
-            // emit an instruction after each compiled expression
-            // so we interpreter resets the stack
-            add_element(&code_array, DEG);
+                // emit an instruction after each compiled expression
+                // so we interpreter resets the stack
+                add_element(&code_array, DEG);
 
-            fwrite(code_array.code, sizeof(int64_t), code_array.size, fptr);
-            free(code_array.code);
-            free_env(&env);
-            printf("updated position is: %ld\n", p.pos);
+                fwrite(code_array.code, sizeof(int64_t), code_array.size, fptr);
+                free(code_array.code);
+                free_env(&env);
+                printf("updated position is: %ld\n", p.pos);
 
-            
-            free_expr(parsed);
+                
+                free_expr(parsed);
+            }
             //free(parsed);
         }
 
@@ -127,8 +131,7 @@ int main(int argc, char **argv) {
 Expr* scheme_parse(Parser *p) {
     skip_whitespace(p);
     if (p->pos >= p->length) {
-        printf("Error: invalid expression\n");
-        exit(1);
+        return NULL;
     }
 
     char c = peek(p);
@@ -275,6 +278,7 @@ void compile_list(Expr *list, Env *env) {
     // Local variables
     } else if(strcmp(op_name, "let") == 0) {
         Env envnew = initializeEnv();
+        envnew.parent = env;
         compile_let(list, &envnew);
         free_env(&envnew);
     // conditionals
@@ -330,7 +334,7 @@ void compile_int2char(Expr *list, Env *env){
            printf("Error: variable not bound\n"); 
            exit(-4);
         }
-    } else if (arg->type != EXPR_INT || arg->type != EXPR_LIST) {
+    } else if (arg->type != EXPR_INT && arg->type != EXPR_LIST) {
         printf("Error: int2char expects a int\n");
         exit(-4);
     }
