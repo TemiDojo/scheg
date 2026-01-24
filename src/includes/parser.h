@@ -38,7 +38,6 @@ Parser new_parser(char *source) {
     Parser p;
     p.source = source;
     p.pos = 0;
-    p.length = strlen(source);
     return p;
 }
 
@@ -223,7 +222,7 @@ Expr* parse_expr(Parser *p) {
     while(1) {
         skip_whitespace(p);
         if (p->pos >= p->length) { 
-            printf("Error: invalid expression, missing ')'");
+            printf("Error: invalid expression");
             exit(-1);
         } else if (peek(p) == ')') {
             advance(p); // consume ');

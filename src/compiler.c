@@ -55,7 +55,8 @@ int main(int argc, char **argv) {
         size_t expr_len = strlen(expr);
 
         Parser p = new_parser(expr);
-        while(p.pos < (expr_len-1)) {
+        p.length = expr_len;
+        while(p.pos < (p.length-1)) {
             global_stackPos = -1;
             code_array = initializeInt64_arr();
 
@@ -68,7 +69,7 @@ int main(int argc, char **argv) {
 
                 puts("******** Display Parsed Expression ******");
                 display_parsed_list(parsed);
-                puts("");
+                printf("\n");
                 puts("*****************************************");
 
                 Env env = initializeEnv();
@@ -99,7 +100,8 @@ int main(int argc, char **argv) {
         getline(&expr, &len, stdin);
         
         Parser p = new_parser(expr);
-        while(p.pos < (strlen(expr)-1)) {
+        p.length = len;
+        while(p.pos < (p.length-1)) {
             global_stackPos = -1;
             code_array = initializeInt64_arr();
 
@@ -110,9 +112,9 @@ int main(int argc, char **argv) {
             puts("*********** PARSING ENDED ***************");
                 
             if (parsed != NULL) {
-                puts("******** Display Parsed Expression struct ************");
+                puts("******** Display Parsed Expression ************");
                 display_parsed_list(parsed);
-                puts("******************************************************");
+                printf("\n");
 
                 Env env = initializeEnv();
 
@@ -131,8 +133,10 @@ int main(int argc, char **argv) {
                 // printf("updated position is: %ld\n", p.pos);
 
                 
-                free_expr(parsed);
+
             }
+
+            free_expr(parsed);
         }
 
         free(expr);

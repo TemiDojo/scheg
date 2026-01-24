@@ -22,9 +22,10 @@ int main(void) {
     // Now create a virtual stack to push data
     stack = initializeInt64_arr();
 
-    //codes_read = fread(&instr, sizeof(int64_t), 1, fp);
+    puts("********** BEGIN INTERPRETING ***********");
     interpret();
-    visualize_stack();
+    puts("*********** INTERPRETER DONE ************");
+    //visualize_stack();
     fclose(fp);
 }
 
@@ -37,6 +38,7 @@ void interpret() {
     int64_t arg1;
     int64_t arg2;
     bool stop = false;
+
     while (true) {
         switch (get_instr()) {
             // Load Instr
@@ -274,7 +276,6 @@ void interpret() {
                 printf("RETURN: %ld\n", untagInt(get(ret_index)));
                 stop = true;
             default:
-                exit(1);
                 break;
         }
         if (stop) break;
