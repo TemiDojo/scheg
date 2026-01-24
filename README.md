@@ -59,4 +59,4 @@ Finally to test the interpreter, run `./interpret <output_filename.out>`.
 wait for the EGciting results
 
 ### HOW TO TEST
-A script called `test.sh` is already provided in the `src` folder. Run the script and it will automatically test all the testcases provided in the test folders with the compiler and interpreter. Additionally, uncomment any lines in the `src/tests/test1` & `src/tests/test2` files, you wish to test and run the test script or test is manually.
+A script called `test.sh` is already provided in the `src` folder. Run the script and it will automatically test all the testcases provided in the test folders against the compiler and interpreter. Additionally, uncomment any lines in the `src/tests/test1` & `src/tests/test2` files, you wish to test and run the test script or test is manually.
