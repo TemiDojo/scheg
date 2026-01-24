@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <fcntl.h>
+#include <unistd.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include "./includes/parser.h"
@@ -17,21 +18,42 @@
 int main(int argc, char **argv) {
 
 
-    FILE *fptr = fopen("put.out", "w");
-    if (fptr == NULL) {
-        printf("File could not be created\n");
-        return -1;
-    } 
 
-    if (argc == 2) {
-        // then we check if the arg passed is a file
-        char *file_path = argv[1];
-        printf("file name: %s\n", file_path);
+    FILE *fptr;
+
+    if (argc > 3) {
+        int opt;
+        char *file_path;
+        char *output_file;
+        while ((opt = getopt(argc, argv, "c:o")) != -1) {
+
+            switch (opt) {
+                case 'c':
+                    file_path = optarg;
+                    printf("%s\n", file_path);
+                    break;
+                case 'o':
+                    output_file = argv[optind];
+                    break;
+                default:
+                    printf("Usage: %s [-c] <file_to_compile> [-o] <output_file_name>\n", argv[0]);
+                    exit(EXIT_FAILURE);
+
+            }
+        }
+        printf("%d\n", optind);
+        if (file_path == NULL) {
+            printf("Error: invalid file_path\nUsage: %s [-c] <file_to_compile> [-o] <output_file_name>\n", argv[0]);
+            return -1;
+        }
+
         int fd = open(file_path, O_RDONLY);
         if (fd < 0) {
             printf("Failed to open file\n");
             return -1;
         }
+
+
         // get file size with fstat
         struct stat bufstat;
         int sd = fstat(fd, &bufstat);
@@ -48,8 +70,15 @@ int main(int argc, char **argv) {
             return -1;
         }
 
-
-
+        if (output_file == NULL) {      // default: put.out
+             fptr = fopen("put.out", "w");
+        } else {
+            fptr = fopen(output_file, "w");
+        }
+        if (fptr == NULL) {
+            printf("File could not be created\n");
+            return -1;
+        }
 
 
         size_t expr_len = strlen(expr);
@@ -93,6 +122,12 @@ int main(int argc, char **argv) {
 
     } else {
     // recieve expr through commmand line
+        
+        fptr = fopen("put.out", "w");
+        if (fptr == NULL ) {
+            printf("File could not be created\n");
+            return -1;
+        }
 
         char *expr = NULL;
         size_t len = 0;

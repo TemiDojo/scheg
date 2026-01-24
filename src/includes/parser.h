@@ -21,6 +21,7 @@ Expr* scheme_parse(Parser *p);
 struct TypeData *Parse(const char *scheme_expr);
 void skip_whitespace(Parser *p);
 void skip_comments(Parser *p);
+void skip_multiline_comments(Parser *p);
 char peek(Parser *p);
 char advance(Parser *p);
 char advanceN(Parser *p);
@@ -86,8 +87,13 @@ void skip_comments(Parser *p) {
 void skip_multiline_comments(Parser *p) {
     advance(p); // consume #
     advance(p); // consume |
-    while(peek(p) != '|' && advanceN(p) != '#') {
-        advance(p);
+    while(true) {
+        if (peek(p) != '|') {
+            advance(p);
+            continue;
+        } else if (advanceN(p) == '#') {
+            break;
+        }
     }
     advance(p); // consume #
     advance(p); // consume |

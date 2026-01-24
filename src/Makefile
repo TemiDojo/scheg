@@ -12,4 +12,4 @@ interpret: interpreter.c ./includes/interpreter.h ./includes/global_helper.h
 	$(CC) interpreter.c $(CFLAGS) -o $@
 
 clean:
-	rm -f compile *scm interpret *.out
+	rm -f compile interpret *.out

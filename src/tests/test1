@@ -1,0 +1,203 @@
+;;;; ====================
+;;;; LOCAL VARIABLES (let)
+;;;; ====================
+
+(let ((a 10) (b 1))      (+   2  b   ))
+(let ((x 5)) x)
+;(let ((x -1) x)
+
+;; Let with operations on bound variable
+;(let ((x 5)) (add1 x))
+;(let ((x 5)) (sub1 x))
+;(let ((x 5)) (+ x 1))
+;(let ((x 5)) (- x 1))
+;(let ((x 5)) (* x 2))
+
+;; Multiple Bindings
+; Multiple bindings
+;(let ((x 1) (y 2)) (+ x y))
+;(let ((x 5) (y 3)) (- x y))
+;(let ((x 2) (y 3)) (* x y))
+;(let ((x 1) (y 2)) (< x y))
+;(let ((x 2) (y 2)) (= x y))
+
+;; Nested let
+#|
+(let ((x 5))
+  (let ((y 3))
+    (+ x y)))
+|#
+
+#|
+(let ((x 1))
+  (let ((y 2))
+    (let ((z 3))
+      (+ x (+ y z)))))
+|#
+
+;; Let with expressions as values
+;(let ((x (+ 1 2))) x)
+;(let ((x (+ 1 2))) (add1 x))
+;(let ((x (+ 1 2)) (y (- 5 2))) (+ x y))
+;(let ((x (* 2 3))) (* x x))
+
+;; Shadowing
+#|
+(let ((x 1))
+  (let ((x 2))
+    x))
+|#
+
+#|
+(let ((x 1))
+  (let ((x (add1 x)))
+    x))
+|#
+
+;;;; ===========================================
+;;;; LOCAL VARIABLES - INVALID (should error)
+;;;; ===========================================
+
+;; Uncomment to test error handling:
+; (let () 5)
+; (let ((x)) x)
+; (let ((5 x)) x)
+; (let ((x 1 2)) x)
+
+;;;; ===========================================
+;;;; CONDITIONALS (if)
+;;;; ===========================================
+
+;; Basic if with booleans
+;(if #t 1 2)
+;(if #f 1 2)
+
+;; If with predicates
+;(if (zero? 0) 1 2)
+;(if (zero? 1) 1 2)
+;(if (null? ()) 1 2)
+;(if (null? 5) 1 2)
+;(if (not #f) 1 2)
+;(if (not #t) 1 2)
+
+;; If with comparisons
+;(if (< 1 2) 10 20)
+;(if (< 2 1) 10 20)
+;(if (= 5 5) 10 20)
+;(if (= 5 6) 10 20)
+
+;; If with type predicates
+;(if (integer? 5) 1 0)
+;(if (integer? #t) 1 0)
+;(if (boolean? #t) 1 0)
+;(if (boolean? 5) 1 0)
+
+;; Nested if
+;(if #t (if #t 1 2) 3)
+;(if #t (if #f 1 2) 3)
+;(if #f 1 (if #t 2 3))
+;(if #f 1 (if #f 2 3))
+
+;; If with expressions in branches
+;(if #t (+ 1 2) (- 5 3))
+;(if #f (+ 1 2) (- 5 3))
+;(if (< 1 2) (add1 5) (sub1 5))
+;(if (< 2 1) (add1 5) (sub1 5))
+
+;; If with let
+#|
+(let ((x 5))
+  (if (zero? x) 0 1))
+|#
+
+#|
+(let ((x 0))
+  (if (zero? x) 0 1))
+|#
+
+#|
+(if #t
+    (let ((x 1)) (add1 x))
+    (let ((x 2)) (sub1 x)))
+|#
+
+#|
+(let ((x 5) (y 3))
+  (if (< x y) x y))
+|#
+
+#|
+(let ((x 3) (y 5))
+  (if (< x y) x y))
+|#
+
+;;;; ===========================================
+;;;; COMPLEX NESTED EXPRESSIONS
+;;;; ===========================================
+
+;; Compute factorial of 5 (manually unrolled)
+;(* 5 (* 4 (* 3 (* 2 1))))
+
+;; Compute 1 + 2 + 3 + 4 + 5
+;(+ 1 (+ 2 (+ 3 (+ 4 5))))
+
+;; Complex nesting
+#|
+(let ((a 1) (b 2))
+  (let ((c (+ a b)))
+    (let ((d (* c c)))
+      (if (< d 10) d (- d 10)))))
+|#
+
+;; Multiple operations
+;(+ (* 2 3) (- 10 5))
+
+;; Deeply nested
+;(add1 (add1 (add1 (add1 (add1 0)))))
+;(sub1 (sub1 (sub1 (sub1 (sub1 5)))))
+
+;; Character and integer conversion round-trip
+;(char->integer (integer->char 65))
+;(integer->char (char->integer #\A))
+
+;; Check types after operations
+;(integer? (+ 1 2))
+;(integer? (add1 5))
+;(boolean? (< 1 2))
+;(boolean? (zero? 0))
+;(boolean? (not #t))
+
+;;;; ===========================================
+;;;; EDGE CASES
+;;;; ===========================================
+
+;; Zero operations
+;(+ 0 0)
+;(- 0 0)
+;(* 0 100)
+;(* 100 0)
+
+;; Identity operations
+;(+ 0 42)
+;(* 1 42)
+;(- 42 0)
+
+;; Negative results
+;(- 5 10)
+;(- 0 1)
+;(sub1 0)
+;(sub1 -1)
+
+;; Boolean logic
+;(not (not #t))
+;(not (not #f))
+;(not (not (not #t)))
+
+;; Comparison chains (using nested if)
+#|
+(if (< 1 2)
+    (if (< 2 3)
+        #t
+        #f)
+    #f)
+|#

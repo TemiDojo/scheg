@@ -12,13 +12,18 @@
 
 // global ptr
 
-int main(void) {
+int main(int argc, char **argv) {
 
-    fp = fopen("put.out", "r");
+    if (argc != 2) {
+        printf("Error: invalid arg ./interpret <file_pathname>\n");
+        return -1;
+    }
+    char *file_path = argv[1];
+    fp = fopen(file_path, "r");
     if (fp == NULL) {
         printf("Error opening file for read\n");
-        return -2;
-    }   
+        return -1;
+    }
     // Now create a virtual stack to push data
     stack = initializeInt64_arr();
 
@@ -72,6 +77,9 @@ void interpret() {
                 */
             case DEG:
                 // clear the stack
+                printf("RETURN: %c\n", untagChar(get(ret_index)));
+                printf("RETURN: %ld\n", untagInt(get(ret_index)));
+
                 env_diff = 0;
                 pop(stack_rsp);
                 stack_rsp-=stack_rsp;
@@ -272,8 +280,8 @@ void interpret() {
                 break;
             case RET:
                 // TODO: check the type before return
-                printf("RETURN: %c\n", untagChar(get(ret_index)));
-                printf("RETURN: %ld\n", untagInt(get(ret_index)));
+                //printf("RETURN: %c\n", untagChar(get(ret_index)));
+                //printf("RETURN: %ld\n", untagInt(get(ret_index)));
                 stop = true;
             default:
                 break;
