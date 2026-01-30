@@ -45,6 +45,7 @@ void interpret() {
     int64_t arg2;
     bool stop = false;
     size_t heap_loc = 0;
+    char* con_ptr = heap;
 
     while (true) {
         switch (get_instr()) {
@@ -87,8 +88,15 @@ void interpret() {
                 printf("RETURN: %c\n", untagChar(get(ret_index)));
                 printf("RETURN: %ld\n", untagInt(get(ret_index)));
                 if (isPair(get(ret_index))) {
-                    char *ptr = (char *)get(untagPair(ret_index)); 
-                    printf("RETURN: (%ld . %ld)\n", untagInt(ptr[0]), untagInt(ptr[1]));
+                    uintptr_t res = untagPair(get(ret_index));
+                    //char *ptr = (char *)untagPair(get(ret_index)); 
+                    char *ptr = ((char *)res);
+                    printf("0x%lx\n", ptr);
+                    int64_t fal = 0;
+                    memcpy(&fal, ptr, sizeof(int64_t));
+                    printf("RETURN: (%ld . %ld)\n", untagInt(fal), untagInt(ptr[1]));
+                    puts("calling unroll cons");
+                    unroll_cons(ptr);
                 }
 
                 env_diff = 0;
@@ -252,22 +260,37 @@ void interpret() {
                 env_diff++;
                 break;
             case CONSEG:
-                
+                puts("CONSEG"); 
                 arg1 = pop();
+                printf("stack.size is : %d\n", stack.size);
                 arg2 = pop();
+                
+
+
+                int64_t val;
+                memcpy(con_ptr, &arg1, sizeof(int64_t));
+                memcpy(&val, con_ptr, sizeof(int64_t));
+                printf("val is:...%ld", (val));
+                con_ptr+=(sizeof(int64_t));
+            
+                memcpy(con_ptr, &arg2, sizeof(int64_t));
+                memcpy(&val, con_ptr, sizeof(int64_t));
+                printf("val is:...%ld", (val));
+
+                con_ptr+=(sizeof(int64_t));
+                //arg2 = pop();
                 //4 after we pop we put on the heap
-                printf("checking alignment 0%16x\n", heap);
-                uintptr_t con_ptr = ((uintptr_t)heap);
+                //((char *) con_ptr)[0] = arg1;
+                // ((char *) con_ptr)[1] = arg2;
 
-                ((char *) con_ptr)[++heap_loc] = arg1;
-                ((char *) con_ptr)[++heap_loc] = arg2;
+                //con_ptr = tagPair(con_ptr);
+                uintptr_t tag_val = tagPair((uintptr_t) (con_ptr- (sizeof(int64_t) * 2)));
 
-                con_ptr = tagPair(con_ptr);
-
-                if ((con_ptr & 0x7) == 0b001) {
+                if ((tag_val & 0x7) == 0b001) {
                     puts("TRUE");
                 }
-                push(con_ptr);
+                push(tag_val);
+                ret_index = stack.size -1;
     
 
                 break;
@@ -284,6 +307,40 @@ void interpret() {
         }
         if (stop) break;
     } 
+}
+
+void unroll_cons(char *ptr) {
+    int64_t arg1;
+    int64_t arg2;
+    memcpy(&arg1, ptr, 8);
+    memcpy(&arg2, ptr+8, 8);
+    if (!isPair(arg1)) {
+        printf(" %ld", untagInt(arg1));
+    }
+    else if (!isPair(arg2)) {
+        printf("%ld ", untagInt(arg2));
+    }
+    if (!isPair(arg1) && !isPair(arg2)) {
+        //printf("(_ . _)");
+        printf("(%ld . %ld)", untagInt(arg2), untagInt(arg1));
+        return;
+    }
+
+    
+    if (!isPair(arg1) && isPair(arg2)) {
+        printf("(");
+        char *ptrl = (char *)(untagPair(arg2));
+        unroll_cons(ptrl);
+    } else if (isPair(arg1) && !isPair(arg2)) {
+        char *ptrl = (char *)(untagPair(arg1));
+        unroll_cons(ptrl);
+        printf(")");
+    }
+
+
+
+    printf(")");
+    
 }
 
 void read_word() {

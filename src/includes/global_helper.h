@@ -39,7 +39,7 @@ bool isValidType(int64_t val);
 bool is_symbol_char(char c);
 bool is_symbol_start(char c);
 void add_at_index(Int64_Array *code_array, int64_t code, size_t index);
-
+void unroll_cons(char *ptr);
 
 
 
@@ -100,7 +100,7 @@ int64_t untagBool(int64_t bools) {
 }
 
 uintptr_t untagPair(uint64_t ptr) {
-    return ptr & PAIR_TAG;
+    return ptr & ~PAIR_TAG;
 }
 
 /*
