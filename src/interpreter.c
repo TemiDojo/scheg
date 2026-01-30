@@ -11,6 +11,7 @@
 
 
 // global ptr
+static int64_t heap[0x1000] = {};
 
 int main(int argc, char **argv) {
 
@@ -36,13 +37,13 @@ int main(int argc, char **argv) {
 
 void interpret() {
     size_t jump_loc = 0;
-    int64_t stack_rsp = -1;
     int64_t ret_index = 0;
     int64_t env_diff = 0;
     int64_t res;
     int64_t arg1;
     int64_t arg2;
     bool stop = false;
+    size_t heap_loc = 0;
 
     while (true) {
         switch (get_instr()) {
@@ -51,7 +52,6 @@ void interpret() {
                 puts("KEG");
                 read_word();
                 push(data);
-                stack_rsp++;
                 break;
             case KLEG:
                 puts("KLEG");
@@ -66,46 +66,36 @@ void interpret() {
                 }
                 // push onto the stack
                 push(env_val); 
-                stack_rsp++;
                 break;
-                /*
-            case LLEG:
-                puts("in lleg");
-                read_word();
-                printf("last env: %ld\n", data);
-                break;
-                */
             case FLEG:
                 puts("FLEG");
                 read_word();
                 // pop the res
-                int64_t dummy_ret = get(stack_rsp);
-                pop(1);
-                stack_rsp--;
+                int64_t dummy_ret = pop();
                 // clear the env values
-                pop(data);
-                stack_rsp-=data;
+                popN(data);
                 push(dummy_ret);
-                stack_rsp++;
-                ret_index = stack_rsp;
+                ret_index = stack.size - 1;
                 break;
             case SIKeEG:
                 puts("SIKeEG");
-                pop(1); // pop the res
-                stack_rsp--;
+                pop(); // pop the res
                 break;
             case DEG:
                 // clear the stack
                 printf("RETURN: %c\n", untagChar(get(ret_index)));
                 printf("RETURN: %ld\n", untagInt(get(ret_index)));
+                if (isPair(get(ret_index))) {
+                    int64_t *ptr = (int64_t *)get(ret_index >> 3); 
+                    printf("RETURN: (%ld . %ld)\n", untagInt(ptr[0]), untagInt(ptr[1]));
+                }
 
                 env_diff = 0;
-                pop(stack_rsp);
-                stack_rsp-=stack_rsp;
+                popN(stack.size - 1);
                 break;
             case cJEG:
                 puts("cJEG");
-                arg1 = get(stack_rsp);
+                arg1 = pop();
                 //arg1 = 0;
                 read_word();
                 if (isBool(arg1)) {
@@ -128,179 +118,159 @@ void interpret() {
                 // TODO: check if of type int/valid type
                 // get the arg
                 puts("AEG");
-                arg1 = untagInt(get(stack_rsp));
-                pop(1);
-                stack_rsp--;
+                arg1 = untagInt(pop());
                 res = arg1 + 1;
                 push(tagInt(res));
-                stack_rsp++;
-                ret_index = stack_rsp;
+                ret_index = stack.size - 1;
                 //env_diff++;
                 break;
             case SEG1:  // sub1
                 // TODO: check if of type int/valid type
                 puts("SEG1");
-                arg1 = untagInt(get(stack_rsp));
-                pop(1);
-                stack_rsp--;
+                arg1 = untagInt(pop());
                 res = arg1 - 1;
                 push(tagInt(res));
-                stack_rsp++;
-                ret_index = stack_rsp;
+                ret_index = stack.size - 1;
                 //env_diff++;
                 break;
             case CEG:   // char2int
                 puts("CEG");
-                arg1 = get(stack_rsp);
-                pop(1);
-                stack_rsp--;
+                arg1 = pop();
                 res = (arg1 >> 6) | INT_TAG;
                 push(res);
-                stack_rsp++;
-                ret_index = stack_rsp;
+                ret_index = stack.size - 1;
                 break;
             case IEG:   // int2char 
                 puts("IEG");
-                arg1 = get(stack_rsp);
-                pop(1);
-                stack_rsp--;
+                arg1 = pop();
                 res = (arg1 << 6) | CHAR_TAG;
                 push(res);
-                stack_rsp++;
-                ret_index = stack_rsp;
+                ret_index = stack.size - 1;
                 break;
             case NEG:   // neg
                 puts("NEG");
-                arg1 = untagInt(get(stack_rsp));
+                arg1 = untagInt(pop());
                 res = -arg1;
                 push(tagInt(res));
-                stack_rsp++;
-                ret_index = stack_rsp;
+                ret_index = stack.size - 1;
                 break;
             case sIEG:  // integer?
                 puts("sIEG");
-                arg1 = get(stack_rsp-1);
-                pop(1);
-                stack_rsp--;
+                arg1 = pop();
                 if(isInt(arg1)) {
                     res = (tagBool(1));
                 } else {
                     res = (tagBool(0));
                 }
                 push(res);
-                stack_rsp++;
-                ret_index = stack_rsp;
+                ret_index = stack.size - 1;
                 //env_diff++;
                 break;
             case sBEG:  // boolean?
                 puts("sBEG");
-                arg1 = get(stack_rsp-1);
-                pop(1);
-                stack_rsp--;
+                arg1 = pop();
                 if (isBool(arg1)) {
                     res = (tagBool(1));
                 } else {
                     res = (tagBool(0));
                 }
                 push(res);
-                stack_rsp++;
-                ret_index = stack_rsp;
+                ret_index = stack.size - 1;
                 //env_diff++;
                 break;
             case ZEG:   // zero?
                 puts("ZEG");
-                arg1 = untagInt(get(stack_rsp));
-                pop(1);
-                stack_rsp--;
+                arg1 = untagInt(pop());
                 if (arg1 == 0) {
                     res = (tagBool(1));
                 } else {
                     res = (tagBool(0));
                 }
                 push(res);
-                stack_rsp++;
-                ret_index= stack_rsp;
+                ret_index= stack.size - 1;
                 break;
             // Binary instr
             case SEG:
                 // TODO: check if of type int/valid type
                 // get the two args
                 puts("SEG");
-                arg1 = untagInt(get(stack_rsp));
-                arg2 = untagInt(get(stack_rsp-1));
-                pop(2);
-                stack_rsp-=2;
+                arg1 = untagInt(pop());
+                arg2 = untagInt(pop());
                 res = arg1 - arg2;
                 push(tagInt(res));
-                stack_rsp++;
-                ret_index = stack_rsp;
+                ret_index = stack.size - 1;
                 env_diff++;
                 break;
             case AEG:
                 puts("ADD");
                 // TODO: check if of type int/valid type
                 // get the two args 
-                arg1 = untagInt(get(stack_rsp)); // arg1
-                arg2 = untagInt(get(stack_rsp-1));
-                pop(2);
-                stack_rsp-=2;
+                arg1 = untagInt(pop()); // arg1
+                arg2 = untagInt(pop());
                 res = arg1 + arg2;
                 push(tagInt(res));
-                stack_rsp++;
-                ret_index = stack_rsp;
+                ret_index = stack.size - 1;
                 env_diff++;
                 break;
             case MEG:
                 // TODO: check if its of type int/valid type
                 puts("MEG");
-                arg1 = untagInt(get(stack_rsp));
-                arg2 = untagInt(get(stack_rsp-1));
-                pop(2);
-                stack_rsp-=2;
+                arg1 = untagInt(pop());
+                arg2 = untagInt(pop());
                 res = arg1 * arg2;
                 push(tagInt(res));
-                stack_rsp++;
-                ret_index = stack_rsp;
+                ret_index = stack.size - 1;
                 env_diff++;
                 break;
             case LEG:
                 // real number required
                 puts("LEG");
-                arg1 = untagInt(get(stack_rsp));
-                arg2 = untagInt(get(stack_rsp-1));
-                pop(2);
-                stack_rsp-=2;
+                arg1 = untagInt(pop());
+                arg2 = untagInt(pop());
                 if (arg1 < arg2) {
                     res = (tagBool(1));
                 } else {
                     res = (tagBool(0));
                 }
                 push(res);
-                stack_rsp++;
-                ret_index = stack_rsp;
+                ret_index = stack.size - 1;
                 env_diff++;
                 break;
             case EEG:
                 puts("EEG");
                 // real number required 
-                arg1 = untagInt(get(stack_rsp));
-                arg2 = untagInt(get(stack_rsp-1));
-                pop(2);
-                stack_rsp-=2;
+                arg1 = untagInt(pop());
+                arg2 = untagInt(pop());
                 if (arg1 == arg2) {
                     res = (tagBool(1));
                 } else {
                     res = (tagBool(0));
                 }
                 push(res);
-                stack_rsp++;
-                ret_index = stack_rsp;
+                ret_index = stack.size - 1;
                 env_diff++;
+                break;
+            case CONSEG:
+                
+                arg1 = pop();
+                arg2 = pop();
+                // after we pop we put on the heap
+                int64_t* con_ptr = heap + heap_loc;
+                con_ptr[++heap_loc] = arg1;
+                con_ptr[++heap_loc] = arg2;
+
+                // tag the ptr and push on stack
+                push(tagPair((int64_t)con_ptr));
+    
+
                 break;
             case RET:
                 // TODO: check the type before return
                 //printf("RETURN: %c\n", untagChar(get(ret_index)));
                 //printf("RETURN: %ld\n", untagInt(get(ret_index)));
+
+
+                // after
                 stop = true;
             default:
                 break;

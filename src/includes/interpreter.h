@@ -28,7 +28,8 @@ void interpret();
 void read_word();
 int64_t get_instr();
 void push(int64_t val);
-void pop(size_t count);
+void popN(size_t count);
+int64_t pop();
 void visualize_stack();
 
 
@@ -39,12 +40,18 @@ void push(int64_t val) {
     //visualize_stack();
 }
 
-void pop(size_t count) {
+void popN(size_t count) {
     //visualize_stack();
     stack.size-=count;
 }
 
-int64_t get(size_t index) {
+int64_t pop() {
+    int64_t retval = stack.code[stack.size-1];
+    stack.size--;
+    return retval;
+}
+
+int64_t get(int64_t index) {
     return stack.code[index];
 }
 

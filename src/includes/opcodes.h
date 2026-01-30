@@ -5,6 +5,8 @@
 #define KLEG    0x2E    // LOAD local variable stack index onto the stack[but rlly I don't have to do that will remove eventually]
 #define RET     0x3E    // RET :) only normal instr
 #define DEG     0x4E    // DEG clears the stack after a root expression
+#define FLEG    0x9E    // 
+#define SIKeEG  0x8E
 #define LLEG    0x5E    // I forgot what this does actually 
 #define cJEG    0x6E    // conditional jump
 #define JEG     0x7E    // just jump
@@ -28,5 +30,8 @@
 #define MEG     0x41E5  // *
 #define LEG     0x51E5  // <
 #define EEG     0x61E5  // =
+                        //
+// Pairs
+#define CONSEG  0x22E5  // (cons _ _)
 
 #endif

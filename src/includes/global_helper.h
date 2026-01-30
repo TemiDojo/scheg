@@ -18,7 +18,7 @@ typedef struct {
 #define CHAR_TAG    0b00001111
 #define BOOL_TAG    0b0011111
 #define MT_MASK     0b00101111
-
+#define PAIR_TAG    0b001
 
 /*
  * Function Declaration
@@ -26,12 +26,14 @@ typedef struct {
 int64_t tagInt(int64_t integer);
 int64_t tagChar(int64_t chars);
 int64_t tagBool(int64_t bools);
+int64_t tagPair(int64_t ptr);
 int64_t untagInt(int64_t integer);
 int64_t untagBool(int64_t bools);
 int64_t untagChar(int64_t chars);
 bool isInt(int64_t integer);
 bool isChar(int64_t chars);
 bool isBool(int64_t bools);
+bool isPair(int64_t ptr);
 bool isValidType(int64_t val);
 bool is_symbol_char(char c);
 bool is_symbol_start(char c);
@@ -74,6 +76,10 @@ int64_t tagBool(int64_t bools) {
     return (bools << 7) | BOOL_TAG;
 }
 
+int64_t tagPair(int64_t ptr) {
+    return (ptr << 3) | PAIR_TAG;
+}
+
 
 
 /*
@@ -111,7 +117,9 @@ bool isValidType(int64_t val) {
     return isInt(val) || isChar(val) || isBool(val);
 }
 
-
+bool isPair(int64_t ptr) {
+    return (ptr & 0b111) == PAIR_TAG;
+}
 
 /*
  * HELPER functions for initializing and managing the data array
