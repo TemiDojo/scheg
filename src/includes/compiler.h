@@ -83,8 +83,10 @@ void compile_eq(Expr *list, Env *env);
 void compile_let(Expr *list, Env *env);
 // conditionals
 void compile_if(Expr *list, Env *env);
-// Pairs cons
+// Pairs: cons, car, cdr
 void compile_cons(Expr *list, Env *env);
+void compile_car(Expr *list, Env *env);
+void compile_cdr(Expr *list, Env *env);
 // Env
 Env initializeEnv();
 void add_binding(Env *env, char *symbol, int64_t stack_location);

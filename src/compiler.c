@@ -286,6 +286,7 @@ void compile_list(Expr *list, Env *env) {
     // empty list
     if (list->as.list.count == 0) {
         add_element(&code_array, KEG);
+        global_stackPos++;
         add_element(&code_array, MT_MASK);
         return;
     }
@@ -339,9 +340,13 @@ void compile_list(Expr *list, Env *env) {
     // conditionals
     } else if(strcmp(op_name, "if") == 0) {
         compile_if(list, env);
-    // Pairs - cons
+    // Pairs - cons, car, cdr
     } else if(strcmp(op_name, "cons") == 0) {
         compile_cons(list, env);
+    } else if(strcmp(op_name, "car") == 0) {
+        compile_car(list, env);
+    } else if (strcmp(op_name, "cdr") == 0) {
+        compile_cdr(list, env);
     } else {
         printf("Error: unknown operator '%s'\n", op_name);
         exit(-3);
@@ -355,7 +360,6 @@ void compile_add1(Expr *list, Env *env) {
     if (list->as.list.count != 2) {
         printf("Error: add1 expects 1 argument\n");
         exit(-4);
-        return;
     }
     Expr *arg = list->as.list.items[1];
     // check the arg type in here, only compile int
@@ -369,7 +373,6 @@ void compile_sub1(Expr *list, Env *env) {
     if (list->as.list.count != 2) {
         printf("Error: sub1 expects 1 argument\n");
         exit(-4);
-        return;
     }
     Expr *arg = list->as.list.items[1];
     // check the arg type in here, only compile int
@@ -383,7 +386,6 @@ void compile_int2char(Expr *list, Env *env){
     if (list->as.list.count != 2) {
         printf("Error: int2char expects 1 argument\n");
         exit(-4);
-        return;
     }
     Expr *arg = list->as.list.items[1];
     // check the type in here only compile int
@@ -643,7 +645,7 @@ void compile_if(Expr *list, Env *env) {
 }
 
 /*
- * Pairs - cons
+ * Pairs - cons, car, cdr
  */
 void compile_cons(Expr *list, Env *env) {
 
@@ -660,4 +662,33 @@ void compile_cons(Expr *list, Env *env) {
 
     // emit cons opcode
     add_element(&code_array, CONSEG);
+}
+
+void compile_car(Expr *list, Env *env) {
+    if (list->as.list.count != 2) {
+        printf("Error: car expects 1 argument\n");
+        exit(-7);
+    }
+
+    Expr *arg1 = list->as.list.items[1];
+
+    Compiler(arg1, env);
+
+    add_element(&code_array, CAREG);
+
+}
+
+void compile_cdr(Expr *list, Env *env) {
+
+    if (list->as.list.count != 2) {
+        printf("Error: cdr expects 1 argument\n");
+        exit(-7);
+    }
+
+    Expr *arg1 = list->as.list.items[1];
+
+    Compiler(arg1, env);
+
+    add_element(&code_array, CDREG);
+
 }

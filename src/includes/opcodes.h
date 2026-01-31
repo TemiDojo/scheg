@@ -33,5 +33,7 @@
                         //
 // Pairs
 #define CONSEG  0x22E5  // (cons _ _)
+#define CAREG   0x23E5
+#define CDREG   0x24E5
 
 #endif

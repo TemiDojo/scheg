@@ -31,7 +31,7 @@ void push(int64_t val);
 void popN(size_t count);
 int64_t pop();
 void visualize_stack();
-int print_res(int64_t res);
+void print_res(int64_t res);
 
 
 

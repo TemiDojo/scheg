@@ -87,6 +87,7 @@ void interpret() {
                 printf("RETURN: ");
                 int64_t result = get(ret_index);
                 print_res(result);
+                puts("");
 
                 env_diff = 0;
                 popN(stack.size - 1);
@@ -267,7 +268,28 @@ void interpret() {
                 }
                 push(tag_val);
                 ret_index = stack.size -1;
-    
+                env_diff++;
+                break;
+            case CAREG:
+                uintptr_t car_arg1 = pop();
+                if (!isPair(car_arg1)) {
+                }
+                char * car_ptr = (char *)untagPair(car_arg1);
+                int64_t car_val;  
+                memcpy(&car_val, car_ptr - (1 * sizeof(int64_t)), sizeof(int64_t));
+                push(car_val);
+                ret_index = stack.size - 1;
+                
+                break;
+            case CDREG:
+                uintptr_t cdr_arg1 = pop();
+                if (!isPair(cdr_arg1)) {
+                }
+                char *cdr_ptr = (char *)untagPair(cdr_arg1);
+                int64_t cdr_val;
+                memcpy(&cdr_val, cdr_ptr - (2 * sizeof(int64_t)), sizeof(int64_t));
+                push(cdr_val);
+                ret_index = stack.size - 1;
 
                 break;
             case RET:
@@ -326,7 +348,7 @@ void unroll_cons(char *ptr) {
     printf(")");
 }
 
-int print_res(int64_t res){
+void print_res(int64_t res){
 
     if (isInt(res)) {
         printf("%ld", untagInt(res));
@@ -340,7 +362,6 @@ int print_res(int64_t res){
         uintptr_t val = untagPair((uintptr_t) res);
         char *ptr = ((char *) val);
         unroll_cons(ptr);
-        puts("");
     }
 }
 
