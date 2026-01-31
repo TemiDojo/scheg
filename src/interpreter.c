@@ -255,6 +255,10 @@ void interpret() {
 
                 arg1 = pop();
                 arg2 = pop();
+                // align the ptr first 
+                if (((uintptr_t)con_ptr) % 8 != 0) {
+                    con_ptr = (char *)(((uintptr_t)con_ptr + 7) & ~7);
+                }
 
                 memcpy(con_ptr, &arg1, sizeof(int64_t));
                 con_ptr+=(sizeof(int64_t));
