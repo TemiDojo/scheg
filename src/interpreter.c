@@ -12,7 +12,7 @@
 
 
 // global ptr
-alignas(8) static char heap[0x1000] = {};
+static char heap[0x1000] = {};
 
 int main(int argc, char **argv) {
 
@@ -45,6 +45,7 @@ void interpret() {
     int64_t arg2;
     bool stop = false;
     char* con_ptr = heap;
+    uintptr_t tag_val;
 
     while (true) {
         switch (get_instr()) {
@@ -261,7 +262,7 @@ void interpret() {
                 memcpy(con_ptr, &arg2, sizeof(int64_t));
                 con_ptr+=(sizeof(int64_t));
 
-                uintptr_t tag_val = tagPair((uintptr_t) (con_ptr));
+                tag_val = tagPair((uintptr_t) (con_ptr));
 
                 if ((tag_val & 0x7) == 0b001) {
                     puts("TRUE");
@@ -271,6 +272,7 @@ void interpret() {
                 env_diff++;
                 break;
             case CAREG:
+                puts("CAREG");
                 uintptr_t car_arg1 = pop();
                 if (!isPair(car_arg1)) {
                 }
@@ -282,6 +284,7 @@ void interpret() {
                 
                 break;
             case CDREG:
+                puts("CDREG");
                 uintptr_t cdr_arg1 = pop();
                 if (!isPair(cdr_arg1)) {
                 }
@@ -292,10 +295,36 @@ void interpret() {
                 ret_index = stack.size - 1;
 
                 break;
+            case STREG:
+                puts("STREG");
+                read_word(); // read the size of the string
+
+                for(size_t i = 0; i < data; i++) {
+                    int64_t dumChar = pop();
+                    if (!isChar(dumChar)) {
+                        printf("Error: character required\n");
+                        exit(-2);
+                    }
+                    *con_ptr++ = untagChar(dumChar);
+                }
+
+                // align the ptr first 
+                if (((uintptr_t)con_ptr) % 8 != 0) {
+                    con_ptr = (char *)(((uintptr_t)con_ptr + 7) & ~7);
+                }
+                memcpy(con_ptr, &data, sizeof(int64_t));
+                con_ptr+=(sizeof(int64_t));
+
+                tag_val = tagStr((uintptr_t) (con_ptr));
+
+                push(tag_val);
+                ret_index = stack.size - 1;
+                break;
             case RET:
                 // TODO: check the type before return
                 //printf("RETURN: %c\n", untagChar(get(ret_index)));
                 //printf("RETURN: %ld\n", untagInt(get(ret_index)));
+
 
 
                 // after
@@ -362,6 +391,20 @@ void print_res(int64_t res){
         uintptr_t val = untagPair((uintptr_t) res);
         char *ptr = ((char *) val);
         unroll_cons(ptr);
+    } else if (isStr((uintptr_t) res)) {
+        int64_t str_size;
+        uintptr_t val = untagStr((uintptr_t) res);
+        char *ptr = ((char *) val);
+        ptr = ptr - (1 * sizeof(int64_t));
+        memcpy(&str_size, ptr, sizeof(int64_t));
+        ptr = ptr - ((str_size / sizeof(int64_t) + 1) * sizeof(int64_t));
+        char str_res[str_size+1] = {};
+
+        for (int i = 0; i < str_size; i++) {
+            str_res[str_size-(i+1)] = ptr[i];
+        }
+        str_res[str_size] = '\0';
+        printf("%s", str_res);
     }
 }
 

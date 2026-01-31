@@ -19,6 +19,7 @@ typedef struct {
 #define BOOL_TAG    0b0011111
 #define MT_MASK     0b00101111
 #define PAIR_TAG    0b001
+#define STR_TAG     0b101
 
 /*
  * Function Declaration
@@ -27,14 +28,17 @@ int64_t tagInt(int64_t integer);
 int64_t tagChar(int64_t chars);
 int64_t tagBool(int64_t bools);
 uintptr_t tagPair(uintptr_t ptr);
+uintptr_t tagStr(uintptr_t ptr);
 int64_t untagInt(int64_t integer);
 int64_t untagBool(int64_t bools);
 int64_t untagChar(int64_t chars);
 uintptr_t untagPair(uint64_t ptr);
+uintptr_t untagStr(uint64_t ptr);
 bool isInt(int64_t integer);
 bool isChar(int64_t chars);
 bool isBool(int64_t bools);
-bool isPair(intptr_t ptr);
+bool isPair(uintptr_t ptr);
+bool isStr(uintptr_t ptr);
 bool isMtList(int64_t mtlist);
 bool isValidType(int64_t val);
 bool is_symbol_char(char c);
@@ -82,6 +86,10 @@ uintptr_t tagPair(uintptr_t ptr) {
     return ptr | PAIR_TAG;
 }
 
+uintptr_t tagStr(uintptr_t ptr) {
+    return ptr | STR_TAG;
+}
+
 
 
 /*
@@ -102,6 +110,10 @@ int64_t untagBool(int64_t bools) {
 
 uintptr_t untagPair(uint64_t ptr) {
     return ptr & ~PAIR_TAG;
+}
+
+uintptr_t untagStr(uint64_t ptr) {
+    return ptr & ~STR_TAG;
 }
 
 /*
@@ -127,8 +139,12 @@ bool isMtList(int64_t mtlist) {
     return mtlist == MT_MASK;
 }
 
-bool isPair(intptr_t ptr) {
+bool isPair(uintptr_t ptr) {
     return (ptr & 0b111) == PAIR_TAG;
+}
+
+bool isStr(uintptr_t ptr) {
+    return (ptr & 0b111) == STR_TAG;
 }
 
 /*

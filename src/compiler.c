@@ -347,6 +347,9 @@ void compile_list(Expr *list, Env *env) {
         compile_car(list, env);
     } else if (strcmp(op_name, "cdr") == 0) {
         compile_cdr(list, env);
+    // String
+    } else if (strcmp(op_name, "string") == 0) {
+        compile_string(list, env);
     } else {
         printf("Error: unknown operator '%s'\n", op_name);
         exit(-3);
@@ -691,4 +694,28 @@ void compile_cdr(Expr *list, Env *env) {
 
     add_element(&code_array, CDREG);
 
+}
+
+/*
+ * String
+ */
+void compile_string(Expr *list, Env *env) {
+
+    if (list->as.list.count < 2) {
+        printf("Error: invalid arg\n");
+        exit(-8);
+    }
+
+    for (size_t i = 1; i < list->as.list.count; i++) {
+        Expr *arg = list->as.list.items[i];
+        /*
+        if (arg.type != EXPR_CHAR) {
+            printf("Error: character required\n");
+            exit(-8);
+        }
+        */
+        Compiler(arg, env);
+    }
+    add_element(&code_array, STREG);
+    add_element(&code_array, (int64_t)(list->as.list.count -1));
 }

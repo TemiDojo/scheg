@@ -36,4 +36,7 @@
 #define CAREG   0x23E5
 #define CDREG   0x24E5
 
+// String
+#define STREG   0x25E5
+
 #endif
