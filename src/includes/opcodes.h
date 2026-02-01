@@ -44,6 +44,7 @@
 
 // Vector
 #define VECTEG  0x29E5
-
+#define VREFEG  0x20E5
+#define VSETEG  0x30E5
 
 #endif

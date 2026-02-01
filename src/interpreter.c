@@ -395,7 +395,7 @@ void interpret() {
                     }
                     dum_ptr--;
                 }
-                set_ptr = (uintptr_t)dum_ptr + ((uintptr_t)set_ptr - (uintptr_t)dum_ptr);
+                set_ptr = (uintptr_t)dum_ptr + (set_ptr - (uintptr_t)dum_ptr);
                 push(tagStr(set_ptr));
                 ret_index = stack.size - 1;
 
@@ -411,7 +411,6 @@ void interpret() {
                     memcpy(con_ptr, &arg1, sizeof(int64_t));
                     con_ptr += sizeof(int64_t);
                 }
-                // con_ptr+=sizeof(int64_t);
                 memcpy(con_ptr, &data, sizeof(int64_t));
 
                 con_ptr+=sizeof(int64_t);
@@ -421,6 +420,76 @@ void interpret() {
                 push(tag_val);
                 ret_index = stack.size - 1;
 
+                break;
+            case VREFEG:
+                puts("VREFEG");
+                
+                arg1 = pop();
+                if (!isInt(arg1)) {
+
+                }
+                arg1 = untagInt(arg1);
+
+                uintptr_t vref_ptr = pop();
+                if (!isVec(vref_ptr)) {
+
+                }
+                vref_ptr = untagVec(vref_ptr);
+                dum_ptr = (char *)vref_ptr;
+                dum_ptr -= sizeof(int64_t);
+                memcpy(&size, dum_ptr, sizeof(int64_t));
+                if (arg1 >= size) {
+                    printf("Error: Invalid index to vector\n");
+                    exit(-2);
+                }
+                dum_ptr -= sizeof(int64_t);
+
+                for (int64_t i = 0; i < size; i++) {
+                    if (arg1 == i) {
+                        memcpy(&res, dum_ptr, sizeof(int64_t)); 
+                        break;
+                    }
+                    dum_ptr -= sizeof(int64_t);
+                }
+                push(res);
+                ret_index = stack.size - 1;
+
+                break;
+            case VSETEG:
+                arg1 = pop();
+                if (!isValidType(arg1)) {
+                    
+                }
+                arg2 = pop();
+                if (!isInt(arg2)) {
+                }
+
+                uintptr_t vset_ptr = pop();
+                if (!isVec(vset_ptr)) {
+
+                }
+                vset_ptr = untagVec(vset_ptr);
+                dum_ptr = (char *)vset_ptr;
+                dum_ptr -= sizeof(int64_t);
+                memcpy(&size, dum_ptr, sizeof(int64_t));
+                if (arg2 >= size) {
+                    printf("Error: Invalid index to vector\n");
+                    exit(-2);
+                }
+                dum_ptr -= sizeof(int64_t);
+
+                for(int64_t i = 0; i < size; i++) {
+                    if (arg2 == i) {
+                        memcpy(dum_ptr, &arg1, sizeof(int64_t));
+                        break;
+                    }
+                    dum_ptr -= sizeof(int64_t);
+                }
+
+                vset_ptr = (uintptr_t) dum_ptr + (vset_ptr - (uintptr_t) dum_ptr);
+                push(tagVec(vset_ptr));
+                ret_index = stack.size - 1;
+                
                 break;
             case RET:
                 // TODO: check the type before return
@@ -515,7 +584,6 @@ void print_res(int64_t res){
         char *ptr = ((char *) val);
         ptr = ptr - (1 * sizeof(int64_t));
         memcpy(&vec_size, ptr, sizeof(int64_t));
-        //ptr = ptr - (vec_size * sizeof(int64_t));
         ptr-=8;
         int64_t v_res;
         printf("#(");

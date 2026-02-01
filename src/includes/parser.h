@@ -31,6 +31,7 @@ Expr* parse_bool(Parser *p);
 Expr* parse_expr(Parser *p);
 Expr* parse_symbol(Parser *p);
 Expr* parse_string(Parser *p);
+Expr* parse_vector(Parser *p);
 
 
 /*
@@ -283,6 +284,37 @@ Expr* parse_string(Parser *p) {
 
     }
     advance(p); // consume '"'
+    return list_expr;
+
+}
+
+Expr* parse_vector(Parser *p) {
+    if (peek(p) != '(') {
+        printf("Error: invalid vector\n");
+        exit(-1);
+    }
+
+    Expr *list_expr = malloc(sizeof(Expr));
+    list_expr->type = EXPR_LIST;
+    list_expr->as.list.items = malloc(8 * sizeof(Expr*));
+    list_expr->as.list.count = 0;
+    list_expr->as.list.capacity = 8;
+
+    char *val = "vector";
+    Parser p_new = new_parser(val);
+    p_new.length = strlen(val);
+    Expr *item1 = parse_symbol(&p_new);
+
+    add_to_list(&list_expr->as.list, item1);
+
+    Expr *items = parse_expr(p);
+    for (size_t i = 0; i < items->as.list.count; i++) {
+        Expr *v_args = items->as.list.items[i];
+        add_to_list(&list_expr->as.list, v_args);
+    }
+    free(items->as.list.items);
+    free(items);    
+    
     return list_expr;
 
 }

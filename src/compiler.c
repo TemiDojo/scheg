@@ -224,6 +224,10 @@ Expr* scheme_parse(Parser *p) {
         return scheme_parse(p);
     } else if (c == '\"') {
         return parse_string(p);
+    } else if (c == '\'' && cN == '#') {
+        advance(p);
+        advance(p);
+        return parse_vector(p);
     }  else {
         printf("Error: wrong expression '%c' \n", c);
         exit(-2);
@@ -362,6 +366,10 @@ void compile_list(Expr *list, Env *env) {
         compile_stringAppend(list, env);
     } else if (strcmp(op_name, "vector") == 0) {
         compile_vector(list, env);
+    } else if (strcmp(op_name, "vector-ref") == 0) {
+        compile_vectorRef(list, env);
+    } else if (strcmp(op_name, "vector-set!") == 0) {
+        compile_vectorSet(list, env);
     } else {
         printf("Error: unknown operator '%s'\n", op_name);
         exit(-3);
@@ -805,4 +813,39 @@ void compile_vector(Expr *list, Env *env) {
     add_element(&code_array, VECTEG);
     add_element(&code_array, (int64_t)(list->as.list.count - 1));
 
+}
+
+void compile_vectorRef(Expr *list, Env *env) {
+
+    if (list->as.list.count != 3) {
+        printf("Error: invalid args\n");
+        exit(-9);
+    }
+
+    Expr *arg1 = list->as.list.items[1];
+    Expr *arg2 = list->as.list.items[2];
+
+    Compiler(arg1, env);
+    Compiler(arg2, env);
+
+    add_element(&code_array, VREFEG);
+
+}
+
+void compile_vectorSet(Expr *list, Env *env) {
+
+    if (list->as.list.count != 4) {
+        printf("Error: vector_set! expects 3 argument\n");
+        exit(-8);
+    }
+
+    Expr *arg1 = list->as.list.items[1];
+    Expr *arg2 = list->as.list.items[2];
+    Expr *arg3 = list->as.list.items[3];
+
+    Compiler(arg1, env);
+    Compiler(arg2, env);
+    Compiler(arg3, env);
+
+    add_element(&code_array, VSETEG);
 }
