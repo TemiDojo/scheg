@@ -207,9 +207,9 @@ void display_parsed_list(Expr *parsed) {
 
         case EXPR_BOOL:
             if (parsed->as.bool_val == 0) {
-                printf("\"#t\"");
-            } else {
                 printf("\"#f\"");
+            } else {
+                printf("\"#t\"");
             }
             break;
 

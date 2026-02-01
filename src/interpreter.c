@@ -401,6 +401,39 @@ void interpret() {
 
                 break;
             case APPEG:
+                puts("APPEG");
+                read_word();
+                res = 0;
+                for (int64_t i = 0; i < data; i++) {
+                    uintptr_t arg = pop();
+                    if (!isStr(arg)) {
+                        printf("Error: string-append expects a string\n");
+                        exit(-2);
+                    }
+                    arg = untagStr(arg);
+                    dum_ptr = (char *)arg; 
+                    dum_ptr -= sizeof(int64_t);
+
+                    memcpy(&size, dum_ptr, sizeof(int64_t));
+
+                    dum_ptr -= ((size / sizeof(int64_t) + 1) * sizeof(int64_t));
+
+                    memcpy(con_ptr, dum_ptr, (size * sizeof(char)));
+                    con_ptr += size;
+                    res += size;
+
+                }
+                if (((uintptr_t)con_ptr) % 8 != 0) {
+                    con_ptr = (char *)(((uintptr_t)con_ptr + 7) & ~7);
+                }
+                memcpy(con_ptr, &res, sizeof(int64_t));
+                con_ptr+= sizeof(int64_t);
+
+                tag_val = tagStr((uintptr_t) con_ptr);
+
+                push(tag_val);
+                ret_index = stack.size - 1;
+
                 break;
             case VECTEG:
                 puts("VECTEG");
@@ -492,6 +525,36 @@ void interpret() {
                 push(tagVec(vset_ptr));
                 ret_index = stack.size - 1;
                 
+                break;
+            case VAPPEG:
+                puts("VAPPEG");
+                read_word();
+                res = 0;
+                for(int64_t i = 0; i < data; i++) {
+                    uintptr_t arg = pop();
+                    if (!isVec(arg)) {
+                        printf("Error: vector-append expects a vector\n");
+                        exit(-2);
+                    }
+                    arg = untagVec(arg);
+                    dum_ptr = (char *)arg;
+                    dum_ptr -= sizeof(int64_t);
+                    memcpy(&size, dum_ptr, sizeof(int64_t));
+                    dum_ptr -= (size * sizeof(int64_t));
+
+                    memcpy(con_ptr, dum_ptr, (size * sizeof(int64_t)));
+                    con_ptr+= (size * sizeof(int64_t));
+
+                    res+= size;
+                }
+                
+                memcpy(con_ptr, &res, sizeof(int64_t));
+                con_ptr += sizeof(int64_t);
+
+                tag_val = tagVec((uintptr_t) con_ptr);
+                push(tag_val);
+
+                ret_index = stack.size - 1;
                 break;
             case RET:
                 // TODO: check the type before return

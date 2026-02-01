@@ -370,6 +370,8 @@ void compile_list(Expr *list, Env *env) {
         compile_vectorRef(list, env);
     } else if (strcmp(op_name, "vector-set!") == 0) {
         compile_vectorSet(list, env);
+    } else if (strcmp(op_name, "vector-append") == 0) {
+        compile_vectorAppend(list, env);
     } else {
         printf("Error: unknown operator '%s'\n", op_name);
         exit(-3);
@@ -848,4 +850,21 @@ void compile_vectorSet(Expr *list, Env *env) {
     Compiler(arg3, env);
 
     add_element(&code_array, VSETEG);
+}
+
+void compile_vectorAppend(Expr *list, Env *env) {
+
+    if (list->as.list.count < 2) {
+        printf("Error: invalid args\n");
+        exit(-9);
+    }
+
+    for (size_t i = 1; i < list->as.list.count; i++) {
+        Expr *arg = list->as.list.items[i];
+        Compiler(arg, env);
+    }
+
+    add_element(&code_array, VAPPEG);
+    add_element(&code_array, (int64_t)(list->as.list.count - 1));
+
 }
