@@ -1,0 +1,98 @@
+;;;; ====================
+;;;; Pairs (cons, car, cdr)
+;;;; ====================
+;(cons 1 2)
+;(cons )
+;(cons 3)
+;(cons ())
+;(cons () 4)
+;(cons 1 ())
+;(cons (cons (cons (cons ()))))
+;(cons 1 (cons 2 (cons 3 (cons 4 (cons 5 ())))))
+
+;;; car
+;(car )
+;(car 2)
+;(car (cons 1 3))
+;(car (cons (cons 1 2)))
+;(car (car (cons 1 (car (cons () 3))))) ; should check type passed to car
+
+;;; cdr
+;(cdr )
+;(cdr 2)
+;(cdr (cons 1 3))
+;(cdr (cons (cons 1 2)))
+;(cdr (cdr (cons 1 (cdr (cons () 3))))) ; should check type passed to cdr
+
+;;;; ====================
+;;;; String
+;;;; ====================
+
+;;; string
+;(string "hello world")
+;(string #\h #\e #\l #\l #\o #\space  #\w #\o #\r #\l #\d)
+;(string #f)
+;(string #\newline #\space #\1 #\3 ())
+
+;;; string-ref
+;(string-ref "" 0)
+;(string-ref "hi")
+;(stirng-ref 4)
+;(string-ref "hello world" 3)
+;(string-ref 3 "hello world!")
+;(string-ref (string #\a #\b #\c) 1)
+;(string-ref "abc" 5)
+;(string-ref "abc" -1)
+
+;;; string-set!
+;(string-set! "abc" 1 #\-)
+;(string-set! "abc" -1 #\-)
+;(string-set!)
+;(string-set! "" 0 #\a)
+;(string-set! )
+
+
+;;; string-append
+;(string-append )
+;(string-append "hey" "how" " " "you")
+;(string-append cons(1 3))
+;(string-append #f 1)
+
+
+;;;; ====================
+;;;; Vectors
+;;;; ====================
+
+;;; vector
+;(vector )
+;(vector 1 2 3)
+;(vector 1 "abc" (cons 1 (cons 2 (cons 3 ()))))
+;(vector '#(1 2 "abc"))
+
+;;; vector-ref
+;(vector-ref )
+;(vector-ref '#(1 2 3) 4 5)
+;(vector-ref 1 2 3)
+;(vector-ref 1 "abc" (cons 1 (cons 2 (cons 3 ()))))
+;(vector-ref '#("abc" #f #t #\space (cons 1 2) ) 4)
+
+;;; vector-set!
+;(vector-set! '#(1 "abc" 3) 1 (cons 1 (cons 2 (cons 3 ()))))
+;(vector-set! 1 '#(1 #f #\a ()))
+;(vector-set! (let ((a 0)) '#(1 2 3)) 2 #\f)
+
+
+;;; vector-append
+;(vector-append )
+;(vector-append '#("hi" #f))
+;(vector-append '#("hi" #t) (let ((a 0)) (cons 1 ())))
+;(vector-append (let ((a 2)) '#((cons 1 ()) #t #\newline)) '#("a" #\b "c"))
+
+
+;;;; ====================
+;;;; Begin
+;;;; ====================
+;(begin )
+;(begin '#(1 #\a #f "hi"))
+;(begin (+ 1 2) (add1 4))
+;(begin (+ 1 2) (+ 2 3) (+ 3 4))

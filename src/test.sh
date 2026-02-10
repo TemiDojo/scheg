@@ -21,5 +21,10 @@ sleep 5
 echo -e "Test 2 completed\n"
 sleep 5
 
+# TEST 3
+./compile -c ./tests/test3 -o test3.out
+./interpret test3.out
+echo -e "Test 3 completed\n"
+
 
 make clean

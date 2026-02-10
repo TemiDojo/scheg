@@ -372,6 +372,8 @@ void compile_list(Expr *list, Env *env) {
         compile_vectorSet(list, env);
     } else if (strcmp(op_name, "vector-append") == 0) {
         compile_vectorAppend(list, env);
+    } else if (strcmp(op_name, "begin") == 0) {
+        compile_begin(list, env);
     } else {
         printf("Error: unknown operator '%s'\n", op_name);
         exit(-3);
@@ -866,5 +868,26 @@ void compile_vectorAppend(Expr *list, Env *env) {
 
     add_element(&code_array, VAPPEG);
     add_element(&code_array, (int64_t)(list->as.list.count - 1));
+
+}
+
+/*
+ * Begin
+ */
+void compile_begin(Expr *list, Env *env) {
+    if (list->as.list.count <= 1) {
+        printf("Error: syntax-error: malformed begin\n");
+        exit(-9);
+    }
+    size_t i;
+    for (i = 1; i < list->as.list.count-1; i++) {
+        Expr *arg = list->as.list.items[i];
+        Compiler(arg, env);
+        add_element(&code_array, SIKeEG);
+    }
+    Expr *arg = list->as.list.items[i];
+    Compiler(arg, env);
+    add_element(&code_array, FLEG);
+    add_element(&code_array, 0);
 
 }

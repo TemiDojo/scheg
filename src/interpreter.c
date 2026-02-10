@@ -281,6 +281,8 @@ void interpret() {
                 puts("CAREG");
                 uintptr_t car_arg1 = pop();
                 if (!isPair(car_arg1)) {
+                    printf("Error: pairs type required\n");
+                    exit(-2);
                 }
                 char * car_ptr = (char *)untagPair(car_arg1);
                 int64_t car_val;  
@@ -293,6 +295,8 @@ void interpret() {
                 puts("CDREG");
                 uintptr_t cdr_arg1 = pop();
                 if (!isPair(cdr_arg1)) {
+                    printf("Error: pairs type required\n");
+                    exit(-2);
                 }
                 char *cdr_ptr = (char *)untagPair(cdr_arg1);
                 int64_t cdr_val;
@@ -340,6 +344,10 @@ void interpret() {
                 dum_ptr = ((char *) ref_ptr);
                 dum_ptr = dum_ptr - (1 * sizeof(int64_t));
                 memcpy(&size, dum_ptr, sizeof(int64_t));
+                if(arg1 >= size || arg1 < 0) {
+                    printf("Error: invalid index to string\n");
+                    exit(-2);
+                }
                 
                 dum_ptr = dum_ptr - ((size / sizeof(int64_t) + 1) * sizeof(int64_t));
                 dum_ptr += (size-1);
@@ -380,7 +388,7 @@ void interpret() {
                 dum_ptr = ((char *) set_ptr);
                 dum_ptr -= (1 * sizeof(int64_t));
                 memcpy(&size, dum_ptr, sizeof(int64_t));
-                if (arg2 >= size) {
+                if (arg2 >= size || arg2 < 0) {
                     printf("Error: invalid index to string\n");
                     exit(-2);
                 }
@@ -473,7 +481,7 @@ void interpret() {
                 dum_ptr = (char *)vref_ptr;
                 dum_ptr -= sizeof(int64_t);
                 memcpy(&size, dum_ptr, sizeof(int64_t));
-                if (arg1 >= size) {
+                if (arg1 >= size || arg1 < size) {
                     printf("Error: Invalid index to vector\n");
                     exit(-2);
                 }
@@ -491,13 +499,14 @@ void interpret() {
 
                 break;
             case VSETEG:
+                puts("VSETEG");
                 arg1 = pop();
                 arg2 = pop();
                 if (!isInt(arg2)) {
                     printf("Error: expects an int\n");
                     exit(-2);
                 }
-
+                arg2 = untagInt(arg2);
                 uintptr_t vset_ptr = pop();
                 if (!isVec(vset_ptr)) {
                     printf("Error: expects a vector\n");
@@ -507,7 +516,7 @@ void interpret() {
                 dum_ptr = (char *)vset_ptr;
                 dum_ptr -= sizeof(int64_t);
                 memcpy(&size, dum_ptr, sizeof(int64_t));
-                if (arg2 >= size) {
+                if (arg2 >= size || arg2 < 0) {
                     printf("Error: Invalid index to vector\n");
                     exit(-2);
                 }
@@ -571,7 +580,7 @@ void unroll_cons(char *ptr) {
     uintptr_t arg2;
 
     memcpy(&arg1, ptr - (1 * sizeof(int64_t)), sizeof(int64_t));
-    memcpy(&arg2, ptr- (2 * sizeof(int64_t)), sizeof(int64_t));
+    memcpy(&arg2, ptr - (2 * sizeof(int64_t)), sizeof(int64_t));
 
     if (!isPair(arg1) && !isPair(arg2)) {
         printf("(");
