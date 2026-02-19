@@ -103,17 +103,15 @@ void interpret() {
                 if (isBool(arg1)) {
                     arg1 = untagBool(arg1);
                     if (arg1 == 0) {
-                        jump_loc = (data * 8) - (codes_read * 8);
-                        fseek(fp, jump_loc, SEEK_CUR);
+                        fseek(fp, (data * 8), SEEK_SET);
                     } 
                 }
                 break;
             case JEG:
                 puts("JEG");
-                read_word();
-                jump_loc = (data * 8) - (codes_read * 8);
-                fseek(fp, jump_loc, SEEK_CUR);
 
+                read_word();
+                fseek(fp, data * 8, SEEK_SET); 
                 break;
             // Unary Primitives
             case AEG1:  // add1
@@ -567,8 +565,14 @@ void interpret() {
                 break;
             case RET:
                 // TODO: check the type before return
-                stop = true;
+                puts("RET");
+                res = pop();
+                int64_t ret_loc = pop();
+                fseek(fp, ret_loc * 8, SEEK_SET);
+                push(res);
+                break;
             default:
+                stop = true;
                 break;
         }
         if (stop) break;
@@ -676,7 +680,7 @@ void read_word() {
 int64_t get_instr() {
 
     if (getc(fp) == EOF) {
-        instr = (int64_t) RET;
+        instr = (int64_t) -1;
     } else {
         fseek(fp, -1, SEEK_CUR);
     }

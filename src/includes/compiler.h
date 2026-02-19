@@ -44,13 +44,15 @@ struct Expr {
 // Struct for the environment variable
 struct Val {
     char *symbol;
-    int64_t stack_location;
+    Int64_Array index;
+    int64_t location;
+    size_t arg_count;
 };
 
 typedef struct Env {
     struct Val *val;
-    size_t count;
-    size_t capacity;
+    ssize_t count;
+    ssize_t capacity;
     struct Env *parent;  // Now refers to the tagged struct
 } Env;
 
@@ -61,44 +63,48 @@ int64_t stack_pointer;
 /*
  *  Function Declaration
  */
-void Compiler(Expr *parsed, Env *env);
+void Compiler(Expr *parsed, Env *env, Env *lvarEnv);
 // Unary Primitives
-void compile_list(Expr *list, Env *env);
-void compile_add1(Expr *list, Env *env);
-void compile_sub1(Expr *list, Env *env);
-void compile_int2char(Expr *list, Env *env);
-void compile_char2int(Expr *list, Env *env);
-void compile_nullp(Expr *list, Env *env);
-void compile_zerop(Expr *list, Env *env);
-void compile_not(Expr *list, Env *env);
-void compile_intp(Expr *list, Env *env);
-void compile_boolp(Expr *list, Env *env);
+void compile_list(Expr *list, Env *env, Env *lvarEnv);
+void compile_add1(Expr *list, Env *env, Env *lvarEnv);
+void compile_sub1(Expr *list, Env *env, Env *lvarEnv);
+void compile_int2char(Expr *list, Env *env, Env *lvarEnv);
+void compile_char2int(Expr *list, Env *env, Env *lvarEnv);
+void compile_nullp(Expr *list, Env *env, Env *lvarEnv);
+void compile_zerop(Expr *list, Env *env, Env *lvarEnv);
+void compile_not(Expr *list, Env *env, Env *lvarEnv);
+void compile_intp(Expr *list, Env *env, Env *lvarEnv);
+void compile_boolp(Expr *list, Env *env, Env *lvarEnv);
 // Binary Primitives
-void compile_add(Expr *list, Env *env);
-void compile_mul(Expr *list, Env *env);
-void compile_sub(Expr *list, Env *env);
-void compile_le(Expr *list, Env *env);
-void compile_eq(Expr *list, Env *env);
+void compile_add(Expr *list, Env *env, Env *lvarEnv);
+void compile_mul(Expr *list, Env *env, Env *lvarEnv);
+void compile_sub(Expr *list, Env *env, Env *lvarEnv);
+void compile_le(Expr *list, Env *env, Env *lvarEnv);
+void compile_eq(Expr *list, Env *env, Env *lvarEnv);
 // Local variables
-void compile_let(Expr *list, Env *env);
+void compile_let(Expr *list, Env *env, Env *lvarEnv);
 // conditionals
-void compile_if(Expr *list, Env *env);
+void compile_if(Expr *list, Env *env, Env *lvarEnv);
 // Pairs: cons, car, cdr
-void compile_cons(Expr *list, Env *env);
-void compile_car(Expr *list, Env *env);
-void compile_cdr(Expr *list, Env *env);
+void compile_cons(Expr *list, Env *env, Env *lvarEnv);
+void compile_car(Expr *list, Env *env, Env *lvarEnv);
+void compile_cdr(Expr *list, Env *env, Env *lvarEnv);
 // string
-void compile_string(Expr *list, Env *env);
-void compile_stringRef(Expr *list, Env *env);
-void compile_stringSet(Expr *list, Env *env);
-void compile_stringAppend(Expr *list, Env *env);
+void compile_string(Expr *list, Env *env, Env *lvarEnv);
+void compile_stringRef(Expr *list, Env *env, Env *lvarEnv);
+void compile_stringSet(Expr *list, Env *env, Env *lvarEnv);
+void compile_stringAppend(Expr *list, Env *env, Env *lvarEnv);
 // vector
-void compile_vector(Expr *list, Env *env);
-void compile_vectorRef(Expr *list, Env *env);
-void compile_vectorSet(Expr *list, Env *env);
-void compile_vectorAppend(Expr *list, Env *env);
+void compile_vector(Expr *list, Env *env, Env *lvarEnv);
+void compile_vectorRef(Expr *list, Env *env, Env *lvarEnv);
+void compile_vectorSet(Expr *list, Env *env, Env *lvarEnv);
+void compile_vectorAppend(Expr *list, Env *env, Env *lvarEnv);
 // Begin
-void compile_begin(Expr *list, Env *env);
+void compile_begin(Expr *list, Env *env, Env *lvarEnv);
+// Labels, code, labelcall
+void compile_labels(Expr *list, Env *env, Env *lvarEnv);
+void compile_code(Expr *list, Env *env, Env *lvarEnv);
+void compile_labelcall(Expr *list, Env *env, Env *lvarEnv);
 // Env
 Env initializeEnv();
 void add_binding(Env *env, char *symbol, int64_t stack_location);
@@ -129,29 +135,33 @@ void add_binding(Env *env, char *symbol, int64_t stack_location) {
     }
 
     const char *s1 = symbol;
-    int64_t stack_pos = lookup(env, symbol);
+    ssize_t env_index = lookup(env, symbol);
 
 
-    if (stack_pos == -1 ) {
+    if (env_index == -1 ) {
         env->val[env->count].symbol = calloc(strlen(symbol)+1, sizeof(char));
         if (env->val[env->count].symbol == NULL) {
             printf("Error: allocation failure\n");
             exit(-1);
         }
         strcpy(env->val[env->count].symbol, s1);
-        env->val[env->count].stack_location = stack_location;
+        env->val[env->count].location = stack_location;
         env->count++;
+    } else {
+        env->val[env_index].location = stack_location;
+
     }
 }
 
-int64_t lookup(Env *env, char *symbol) {
+ssize_t lookup(Env *env, char *symbol) {
 
     const char *s1 = symbol;
 
-    for (size_t i = 0; i < env->count; i++) {
+    for (ssize_t i = 0; i < env->count; i++) {
         const char *s2 = env->val[i].symbol;
         if (strcmp(s1, s2) == 0) {
-            return env->val[i].stack_location;
+            return i;
+            // return env->val[i].location;
         }
 
     }
@@ -272,7 +282,7 @@ void free_expr(Expr *parsed) {
 }
 
 void free_env(Env *env) {
-    for (size_t i = 0; i < env->count; i++) {
+    for (ssize_t i = 0; i < env->count; i++) {
         free(env->val[i].symbol); 
     }
     
