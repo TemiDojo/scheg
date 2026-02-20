@@ -101,10 +101,9 @@ int main(int argc, char **argv) {
                 printf("\n");
 
                 Env env = initializeEnv();
-                Env lvarEnv = initializeEnv();
 
                 puts("******** BEGIN COMPILING ****************");
-                Compiler(parsed, &env, &lvarEnv);
+                Compiler(parsed, &env);
                 puts("✓ Sucess");
                 puts("******** COMPILING ENDED ****************");
 
@@ -115,7 +114,6 @@ int main(int argc, char **argv) {
                 fwrite(code_array.code, sizeof(int64_t), code_array.size, fptr);
                 free(code_array.code);
                 free_env(&env);
-                free_env(&lvarEnv);
                 // printf("updated position is: %ld\n", p.pos);
                 free_expr(parsed);
             }
@@ -155,10 +153,9 @@ int main(int argc, char **argv) {
                 printf("\n");
 
                 Env env = initializeEnv();
-                Env lvarEnv = initializeEnv();
 
                 puts("******** BEGIN COMPILING *****************************");
-                Compiler(parsed, &env, &lvarEnv);
+                Compiler(parsed, &env);
                 puts("✓ Sucess");
                 puts("******** COMPILING ENDED *****************************");
 
@@ -169,7 +166,6 @@ int main(int argc, char **argv) {
                 fwrite(code_array.code, sizeof(int64_t), code_array.size, fptr);
                 free(code_array.code);
                 free_env(&env);
-                free_env(&lvarEnv);
                 // printf("updated position is: %ld\n", p.pos);
 
                 
@@ -240,7 +236,7 @@ Expr* scheme_parse(Parser *p) {
 }
 
 
-void Compiler(Expr *parsed, Env *env, Env *lvarEnv) {
+void Compiler(Expr *parsed, Env *env) {
 
     if (parsed == NULL) {
         printf("NULL");
@@ -284,7 +280,7 @@ void Compiler(Expr *parsed, Env *env, Env *lvarEnv) {
             //global_stackPos++;
             break;
         case EXPR_LIST:
-            compile_list(parsed, env, lvarEnv);
+            compile_list(parsed, env);
             break; 
         default:
             printf("Error: unknown expression type\n");
@@ -293,7 +289,7 @@ void Compiler(Expr *parsed, Env *env, Env *lvarEnv) {
     }
 }
 
-void compile_list(Expr *list, Env *env, Env *lvarEnv) {
+void compile_list(Expr *list, Env *env) {
 
     // empty list
     if (list->as.list.count == 0) {
@@ -314,77 +310,70 @@ void compile_list(Expr *list, Env *env, Env *lvarEnv) {
     // unary primitives
     if (strcmp(op_name, "add1") == 0) {
         // we load some 
-        compile_add1(list, env, lvarEnv);
+        compile_add1(list, env);
     } else if(strcmp(op_name, "sub1") == 0) {
-        compile_sub1(list, env, lvarEnv);
+        compile_sub1(list, env);
     } else if(strcmp(op_name, "integer->char") == 0) {
-        compile_int2char(list, env, lvarEnv);
+        compile_int2char(list, env);
     } else if(strcmp(op_name, "char->integer") == 0) {
-        compile_char2int(list, env, lvarEnv);
+        compile_char2int(list, env);
     } else if(strcmp(op_name, "null?") == 0) {
-        compile_nullp(list, env, lvarEnv);
+        compile_nullp(list, env);
     } else if(strcmp(op_name, "zero?") == 0) {
-        compile_zerop(list, env, lvarEnv);
+        compile_zerop(list, env);
     } else if(strcmp(op_name, "not") == 0) {
-        compile_not(list, env, lvarEnv);
+        compile_not(list, env);
     } else if(strcmp(op_name, "integer?") == 0) {
-        compile_intp(list, env, lvarEnv);
+        compile_intp(list, env);
     } else if(strcmp(op_name, "boolean?") == 0) {
-        compile_boolp(list, env, lvarEnv);
+        compile_boolp(list, env);
     } 
     // Binary primitives
     else if(strcmp(op_name, "+") == 0) {
-        compile_add(list, env, lvarEnv);
+        compile_add(list, env);
     } else if (strcmp(op_name, "-") == 0) {
-        compile_sub(list, env, lvarEnv);
+        compile_sub(list, env);
     } else if(strcmp(op_name, "*") == 0) {
-        compile_mul(list, env, lvarEnv);
+        compile_mul(list, env);
     } else if(strcmp(op_name, "<") == 0) {
-        compile_le(list, env, lvarEnv);
+        compile_le(list, env);
     } else if(strcmp(op_name, "=") == 0) {
-        compile_eq(list, env, lvarEnv);
+        compile_eq(list, env);
     // Local variables
     } else if(strcmp(op_name, "let") == 0) {
         Env envnew = initializeEnv();
         envnew.parent = env;
-        compile_let(list, &envnew, lvarEnv);
+        compile_let(list, &envnew);
         free_env(&envnew);
     // conditionals
     } else if(strcmp(op_name, "if") == 0) {
-        compile_if(list, env, lvarEnv);
+        compile_if(list, env);
     // Pairs - cons, car, cdr
     } else if(strcmp(op_name, "cons") == 0) {
-        compile_cons(list, env, lvarEnv);
+        compile_cons(list, env);
     } else if(strcmp(op_name, "car") == 0) {
-        compile_car(list, env, lvarEnv);
+        compile_car(list, env);
     } else if (strcmp(op_name, "cdr") == 0) {
-        compile_cdr(list, env, lvarEnv);
+        compile_cdr(list, env);
     // String
     } else if (strcmp(op_name, "string") == 0) {
-        compile_string(list, env, lvarEnv);
+        compile_string(list, env);
     } else if (strcmp(op_name, "string-ref") == 0) {
-        compile_stringRef(list, env, lvarEnv);
+        compile_stringRef(list, env);
     } else if (strcmp(op_name, "string-set!") == 0) {
-        compile_stringSet(list, env, lvarEnv);
+        compile_stringSet(list, env);
     } else if (strcmp(op_name, "string-append") == 0) {
-        compile_stringAppend(list, env, lvarEnv);
+        compile_stringAppend(list, env);
     } else if (strcmp(op_name, "vector") == 0) {
-        compile_vector(list, env, lvarEnv);
+        compile_vector(list, env);
     } else if (strcmp(op_name, "vector-ref") == 0) {
-        compile_vectorRef(list, env, lvarEnv);
+        compile_vectorRef(list, env);
     } else if (strcmp(op_name, "vector-set!") == 0) {
-        compile_vectorSet(list, env, lvarEnv);
+        compile_vectorSet(list, env);
     } else if (strcmp(op_name, "vector-append") == 0) {
-        compile_vectorAppend(list, env, lvarEnv);
+        compile_vectorAppend(list, env);
     } else if (strcmp(op_name, "begin") == 0) {
-        compile_begin(list, env, lvarEnv);
-    // labels, code, labelcall
-    } else if (strcmp(op_name, "labels") == 0) {
-        compile_labels(list, env, lvarEnv);
-    } else if (strcmp(op_name, "code") == 0) {
-        compile_code(list, env, lvarEnv);
-    } else if (strcmp(op_name, "labelcall") == 0) {
-        compile_labelcall(list, env, lvarEnv);
+        compile_begin(list, env);
     } else {
         printf("Error: unknown operator '%s'\n", op_name);
         exit(-3);
@@ -394,7 +383,7 @@ void compile_list(Expr *list, Env *env, Env *lvarEnv) {
 /*
  * Unary Primitives
  */
-void compile_add1(Expr *list, Env *env, Env *lvarEnv) {
+void compile_add1(Expr *list, Env *env) {
     if (list->as.list.count != 2) {
         printf("Error: add1 expects 1 argument\n");
         exit(-4);
@@ -402,12 +391,12 @@ void compile_add1(Expr *list, Env *env, Env *lvarEnv) {
     Expr *arg = list->as.list.items[1];
     // check the arg type in here, only compile int
     // or list expr that will return int
-    Compiler(arg, env, lvarEnv);
+    Compiler(arg, env);
 
     add_element(&code_array, AEG1);
 }
 
-void compile_sub1(Expr *list, Env *env, Env *lvarEnv) {
+void compile_sub1(Expr *list, Env *env) {
     if (list->as.list.count != 2) {
         printf("Error: sub1 expects 1 argument\n");
         exit(-4);
@@ -415,12 +404,12 @@ void compile_sub1(Expr *list, Env *env, Env *lvarEnv) {
     Expr *arg = list->as.list.items[1];
     // check the arg type in here, only compile int
     // or list expr that will return int
-    Compiler(arg, env, lvarEnv);
+    Compiler(arg, env);
 
     add_element(&code_array, SEG1);
 }
 
-void compile_int2char(Expr *list, Env *env, Env *lvarEnv){
+void compile_int2char(Expr *list, Env *env){
     if (list->as.list.count != 2) {
         printf("Error: int2char expects 1 argument\n");
         exit(-4);
@@ -438,12 +427,12 @@ void compile_int2char(Expr *list, Env *env, Env *lvarEnv){
     }
 
     // or list epxr that will return int
-    Compiler(arg, env, lvarEnv);
+    Compiler(arg, env);
 
     add_element(&code_array, IEG);
 }
 
-void compile_char2int(Expr *list, Env *env, Env *lvarEnv) {
+void compile_char2int(Expr *list, Env *env) {
     if (list->as.list.count != 2) {
         printf("Error: char2int expects 1 argument\n");
         exit(-4);
@@ -451,34 +440,34 @@ void compile_char2int(Expr *list, Env *env, Env *lvarEnv) {
     Expr *arg = list->as.list.items[1];
     // check the type in here, only compile char
     // or list expr that will return char
-    Compiler(arg, env, lvarEnv);
+    Compiler(arg, env);
 
     add_element(&code_array, CEG);
 }
 
-void compile_nullp(Expr *list, Env *env, Env *lvarEnv) {
+void compile_nullp(Expr *list, Env *env) {
     if (list->as.list.count != 2) {
         printf("Error: nullp expects 1 argument\n");
         exit(-4);
     }
     Expr *arg = list->as.list.items[1];
-    Compiler(arg, env, lvarEnv);
+    Compiler(arg, env);
 
     add_element(&code_array, NEG);
 }
 
-void compile_zerop(Expr *list, Env *env, Env *lvarEnv) {
+void compile_zerop(Expr *list, Env *env) {
     if (list->as.list.count != 2) {
         printf("Error: zerop expects 1 argument\n");
         exit(-4);
     }
     Expr *arg = list->as.list.items[1];
-    Compiler(arg, env, lvarEnv);
+    Compiler(arg, env);
 
     add_element(&code_array, ZEG);
 }
 
-void compile_not(Expr *list, Env *env, Env *lvarEnv) {
+void compile_not(Expr *list, Env *env) {
     if (list->as.list.count != 2) {
         printf("Error: not expects 1 argument\n");
         exit(-4);
@@ -487,12 +476,12 @@ void compile_not(Expr *list, Env *env, Env *lvarEnv) {
     // check the arg type in here, only compile int
     // or list expr that will return int
     // or a symbol that does exist in the env
-    Compiler(arg, env, lvarEnv);
+    Compiler(arg, env);
 
     add_element(&code_array, NEG);
 }
 
-void compile_intp(Expr *list, Env *env, Env *lvarEnv) {
+void compile_intp(Expr *list, Env *env) {
     if (list->as.list.count != 2) {
         printf("Error: intp expects 1 argument\n");
         exit(-4);
@@ -500,18 +489,18 @@ void compile_intp(Expr *list, Env *env, Env *lvarEnv) {
     Expr *arg = list->as.list.items[1];
     // check the arg type, only compile int or
     // list epxr that will return int
-    Compiler(arg, env, lvarEnv);
+    Compiler(arg, env);
     
     add_element(&code_array, sIEG);
 }
 
-void compile_boolp(Expr *list, Env *env, Env *lvarEnv) {
+void compile_boolp(Expr *list, Env *env) {
     if (list->as.list.count != 2) {
         printf("Error: boolp expects 1 argument\n");
         exit(-4);
     }
     Expr *arg = list->as.list.items[1];
-    Compiler(arg, env, lvarEnv);
+    Compiler(arg, env);
 
     add_element(&code_array, sBEG);
 }
@@ -520,31 +509,31 @@ void compile_boolp(Expr *list, Env *env, Env *lvarEnv) {
 /*
  * Binary Primitives
  */
-void compile_sub(Expr *list, Env *env, Env *lvarEnv) {
+void compile_sub(Expr *list, Env *env) {
     if (list->as.list.count != 3) {
         printf("Error: - expects 2 argument\n");
         exit(-5);
     }
     Expr *arg1 = list->as.list.items[2];
-    Compiler(arg1, env, lvarEnv);
+    Compiler(arg1, env);
 
     Expr *arg2 = list->as.list.items[1];
-    Compiler(arg2, env, lvarEnv);
+    Compiler(arg2, env);
 
     add_element(&code_array, SEG);
 }
 
 
-void compile_add(Expr *list, Env *env, Env *lvarEnv) {
+void compile_add(Expr *list, Env *env) {
     if (list->as.list.count != 3) {
         printf("Error: + expects 2 argument\n");
         exit(-5);
     }
     Expr *arg1 = list->as.list.items[2];
-    Compiler(arg1, env, lvarEnv);
+    Compiler(arg1, env);
 
     Expr *arg2 = list->as.list.items[1];
-    Compiler(arg2, env, lvarEnv);
+    Compiler(arg2, env);
     
     /*
     if (env->count > 0) {
@@ -557,46 +546,46 @@ void compile_add(Expr *list, Env *env, Env *lvarEnv) {
 }
 
 
-void compile_mul(Expr *list, Env *env, Env *lvarEnv) {
+void compile_mul(Expr *list, Env *env) {
     if (list->as.list.count != 3) {
         printf("Error: * expects 2 argument\n");
         exit(-5);
     }
     Expr *arg1 = list->as.list.items[2];
-    Compiler(arg1, env, lvarEnv);
+    Compiler(arg1, env);
 
     Expr *arg2 = list->as.list.items[1];
-    Compiler(arg2, env, lvarEnv);
+    Compiler(arg2, env);
 
     add_element(&code_array, MEG);
 }
 
 
-void compile_le(Expr *list, Env *env, Env *lvarEnv) {
+void compile_le(Expr *list, Env *env) {
     if (list->as.list.count != 3) {
         printf("Error: < expects 2 argument\n");
         exit(-5);
     }
     Expr *arg1 = list->as.list.items[2];
-    Compiler(arg1, env, lvarEnv);
+    Compiler(arg1, env);
 
     Expr *arg2 = list->as.list.items[1];
-    Compiler(arg2, env, lvarEnv);
+    Compiler(arg2, env);
 
     add_element(&code_array, LEG);
 }
 
 
-void compile_eq(Expr *list, Env *env, Env *lvarEnv) {
+void compile_eq(Expr *list, Env *env) {
     if (list->as.list.count != 3) {
         printf("Error: = expects 2 argument\n");
         exit(-5);
     }
     Expr *arg1 = list->as.list.items[2];
-    Compiler(arg1, env, lvarEnv);
+    Compiler(arg1, env);
 
     Expr *arg2 = list->as.list.items[1];
-    Compiler(arg2, env, lvarEnv);
+    Compiler(arg2, env);
 
     add_element(&code_array, EEG);
 }
@@ -605,7 +594,7 @@ void compile_eq(Expr *list, Env *env, Env *lvarEnv) {
 /*
  * Local variables
  */
-void compile_let(Expr *list, Env *env, Env *lvarEnv) {
+void compile_let(Expr *list, Env *env) {
     if (list->as.list.count <= 1) {
         printf("Error: syntax-error: malformed let\n");
         exit(-6);
@@ -622,7 +611,7 @@ void compile_let(Expr *list, Env *env, Env *lvarEnv) {
         }
         // evaluate the right most arg
         Expr *arg = arg1->as.list.items[i]->as.list.items[1];
-        Compiler(arg, env, lvarEnv);
+        Compiler(arg, env);
         // let should support every type
         add_binding(env, arg1->as.list.items[i]->as.list.items[0]->as.symbol, global_stackPos);
     }
@@ -630,11 +619,11 @@ void compile_let(Expr *list, Env *env, Env *lvarEnv) {
    size_t i;
    for(i = 2; i < list->as.list.count-1; i++) {
        Expr *arg2 = list->as.list.items[i];
-       Compiler(arg2, env, lvarEnv);
+       Compiler(arg2, env);
        add_element(&code_array, SIKeEG);
    }
    Expr *arg2 = list->as.list.items[i];
-   Compiler(arg2, env, lvarEnv);
+   Compiler(arg2, env);
    add_element(&code_array, FLEG);
    add_element(&code_array, arg1->as.list.count);
 
@@ -643,7 +632,7 @@ void compile_let(Expr *list, Env *env, Env *lvarEnv) {
 /*
  * Conditionals
  */
-void compile_if(Expr *list, Env *env, Env *lvarEnv) {
+void compile_if(Expr *list, Env *env) {
 
     if (list->as.list.count != 4) {
         printf("Error: if expects 3 args: test conseq altern\n");
@@ -658,7 +647,7 @@ void compile_if(Expr *list, Env *env, Env *lvarEnv) {
 
 
     // emit test bool val
-    Compiler(test, env, lvarEnv);
+    Compiler(test, env);
     add_element(&code_array, cJEG); // jump opcode
                                     // 
     size_t idx = code_array.size;
@@ -666,7 +655,7 @@ void compile_if(Expr *list, Env *env, Env *lvarEnv) {
 
 
     // emit l1 label consequent
-    Compiler(conseq, env, lvarEnv);
+    Compiler(conseq, env);
     // emit jump to end of if
     add_element(&code_array, JEG); // jump opcode
     size_t idx2 = code_array.size;
@@ -674,7 +663,7 @@ void compile_if(Expr *list, Env *env, Env *lvarEnv) {
 
     // if false jump to altern
     int64_t l0_label = code_array.size;
-    Compiler(altern, env, lvarEnv);
+    Compiler(altern, env);
     // emit cjump to l0
     add_at_index(&code_array, l0_label, idx);
     // emit jump to end of if
@@ -685,7 +674,7 @@ void compile_if(Expr *list, Env *env, Env *lvarEnv) {
 /*
  * Pairs - cons, car, cdr
  */
-void compile_cons(Expr *list, Env *env, Env *lvarEnv) {
+void compile_cons(Expr *list, Env *env) {
 
     if (list->as.list.count != 3) {
         printf("Error: cons expects 2 args\n");
@@ -695,14 +684,14 @@ void compile_cons(Expr *list, Env *env, Env *lvarEnv) {
     Expr *arg1 = list->as.list.items[1];
     Expr *arg2 = list->as.list.items[2];
 
-    Compiler(arg1, env, lvarEnv);
-    Compiler(arg2, env, lvarEnv);
+    Compiler(arg1, env);
+    Compiler(arg2, env);
 
     // emit cons opcode
     add_element(&code_array, CONSEG);
 }
 
-void compile_car(Expr *list, Env *env, Env *lvarEnv) {
+void compile_car(Expr *list, Env *env) {
     if (list->as.list.count != 2) {
         printf("Error: car expects 1 argument\n");
         exit(-7);
@@ -710,13 +699,13 @@ void compile_car(Expr *list, Env *env, Env *lvarEnv) {
 
     Expr *arg1 = list->as.list.items[1];
 
-    Compiler(arg1, env, lvarEnv);
+    Compiler(arg1, env);
 
     add_element(&code_array, CAREG);
 
 }
 
-void compile_cdr(Expr *list, Env *env, Env *lvarEnv) {
+void compile_cdr(Expr *list, Env *env) {
 
     if (list->as.list.count != 2) {
         printf("Error: cdr expects 1 argument\n");
@@ -725,7 +714,7 @@ void compile_cdr(Expr *list, Env *env, Env *lvarEnv) {
 
     Expr *arg1 = list->as.list.items[1];
 
-    Compiler(arg1, env, lvarEnv);
+    Compiler(arg1, env);
 
     add_element(&code_array, CDREG);
 
@@ -734,7 +723,7 @@ void compile_cdr(Expr *list, Env *env, Env *lvarEnv) {
 /*
  * String
  */
-void compile_string(Expr *list, Env *env, Env *lvarEnv) {
+void compile_string(Expr *list, Env *env) {
 
     if (list->as.list.count < 2) {
         printf("Error: invalid arg\n");
@@ -749,13 +738,13 @@ void compile_string(Expr *list, Env *env, Env *lvarEnv) {
             exit(-8);
         }
         */
-        Compiler(arg, env, lvarEnv);
+        Compiler(arg, env);
     }
     add_element(&code_array, STREG);
     add_element(&code_array, (int64_t)(list->as.list.count -1));
 }
 
-void compile_stringRef(Expr *list, Env *env, Env *lvarEnv) {
+void compile_stringRef(Expr *list, Env *env) {
 
     if (list->as.list.count != 3) {
         printf("Error: stringRef expects 2 argument\n");
@@ -765,14 +754,14 @@ void compile_stringRef(Expr *list, Env *env, Env *lvarEnv) {
     Expr *arg1 = list->as.list.items[1];
     Expr *arg2 = list->as.list.items[2];
 
-    Compiler(arg1, env, lvarEnv);
-    Compiler(arg2, env, lvarEnv);
+    Compiler(arg1, env);
+    Compiler(arg2, env);
 
     add_element(&code_array, REFEG);
 
 }
 
-void compile_stringSet(Expr *list, Env *env, Env *lvarEnv) {
+void compile_stringSet(Expr *list, Env *env) {
 
     if (list->as.list.count != 4) {
         printf("Error: stringSet expects 3 argument\n");
@@ -783,15 +772,15 @@ void compile_stringSet(Expr *list, Env *env, Env *lvarEnv) {
     Expr *arg2 = list->as.list.items[2];
     Expr *arg3 = list->as.list.items[3];
 
-    Compiler(arg1, env, lvarEnv);
-    Compiler(arg2, env, lvarEnv);
-    Compiler(arg3, env, lvarEnv);
+    Compiler(arg1, env);
+    Compiler(arg2, env);
+    Compiler(arg3, env);
 
     add_element(&code_array, SETEG);
 
 }
 
-void compile_stringAppend(Expr *list, Env *env, Env *lvarEnv) {
+void compile_stringAppend(Expr *list, Env *env) {
 
     if (list->as.list.count < 2) {
         printf("Error: invalid args\n");
@@ -801,7 +790,7 @@ void compile_stringAppend(Expr *list, Env *env, Env *lvarEnv) {
     for (size_t i = 1; i < list->as.list.count; i++) {
         Expr *arg = list->as.list.items[i];
 
-        Compiler(arg, env, lvarEnv);
+        Compiler(arg, env);
     }
 
     add_element(&code_array, APPEG);
@@ -812,7 +801,7 @@ void compile_stringAppend(Expr *list, Env *env, Env *lvarEnv) {
 /*
  *  Vector
  */
-void compile_vector(Expr *list, Env *env, Env *lvarEnv) {
+void compile_vector(Expr *list, Env *env) {
 
     if (list->as.list.count < 2) {
         printf("Error: invalid args\n");
@@ -822,7 +811,7 @@ void compile_vector(Expr *list, Env *env, Env *lvarEnv) {
     for (size_t i = 1; i < list->as.list.count; i++) {
         Expr *arg = list->as.list.items[i];
 
-        Compiler(arg, env, lvarEnv);
+        Compiler(arg, env);
     }
 
     add_element(&code_array, VECTEG);
@@ -830,7 +819,7 @@ void compile_vector(Expr *list, Env *env, Env *lvarEnv) {
 
 }
 
-void compile_vectorRef(Expr *list, Env *env, Env *lvarEnv) {
+void compile_vectorRef(Expr *list, Env *env) {
 
     if (list->as.list.count != 3) {
         printf("Error: invalid args\n");
@@ -840,14 +829,14 @@ void compile_vectorRef(Expr *list, Env *env, Env *lvarEnv) {
     Expr *arg1 = list->as.list.items[1];
     Expr *arg2 = list->as.list.items[2];
 
-    Compiler(arg1, env, lvarEnv);
-    Compiler(arg2, env, lvarEnv);
+    Compiler(arg1, env);
+    Compiler(arg2, env);
 
     add_element(&code_array, VREFEG);
 
 }
 
-void compile_vectorSet(Expr *list, Env *env, Env *lvarEnv) {
+void compile_vectorSet(Expr *list, Env *env) {
 
     if (list->as.list.count != 4) {
         printf("Error: vector_set! expects 3 argument\n");
@@ -858,14 +847,14 @@ void compile_vectorSet(Expr *list, Env *env, Env *lvarEnv) {
     Expr *arg2 = list->as.list.items[2];
     Expr *arg3 = list->as.list.items[3];
 
-    Compiler(arg1, env, lvarEnv);
-    Compiler(arg2, env, lvarEnv);
-    Compiler(arg3, env, lvarEnv);
+    Compiler(arg1, env);
+    Compiler(arg2, env);
+    Compiler(arg3, env);
 
     add_element(&code_array, VSETEG);
 }
 
-void compile_vectorAppend(Expr *list, Env *env, Env *lvarEnv) {
+void compile_vectorAppend(Expr *list, Env *env) {
 
     if (list->as.list.count < 2) {
         printf("Error: invalid args\n");
@@ -874,7 +863,7 @@ void compile_vectorAppend(Expr *list, Env *env, Env *lvarEnv) {
 
     for (size_t i = 1; i < list->as.list.count; i++) {
         Expr *arg = list->as.list.items[i];
-        Compiler(arg, env, lvarEnv);
+        Compiler(arg, env);
     }
 
     add_element(&code_array, VAPPEG);
@@ -885,7 +874,7 @@ void compile_vectorAppend(Expr *list, Env *env, Env *lvarEnv) {
 /*
  * Begin
  */
-void compile_begin(Expr *list, Env *env, Env *lvarEnv) {
+void compile_begin(Expr *list, Env *env) {
     if (list->as.list.count <= 1) {
         printf("Error: syntax-error: malformed begin\n");
         exit(-9);
@@ -893,168 +882,12 @@ void compile_begin(Expr *list, Env *env, Env *lvarEnv) {
     size_t i;
     for (i = 1; i < list->as.list.count-1; i++) {
         Expr *arg = list->as.list.items[i];
-        Compiler(arg, env, lvarEnv);
+        Compiler(arg, env);
         add_element(&code_array, SIKeEG);
     }
     Expr *arg = list->as.list.items[i];
-    Compiler(arg, env, lvarEnv);
+    Compiler(arg, env);
     add_element(&code_array, FLEG);
     add_element(&code_array, 0);
-
-}
-
-/*
- * Labels
- */
-void compile_labels(Expr *list, Env *env, Env *lvarEnv) {
-    if (list->as.list.count != 3) {
-        printf("Error: invalid numbers of args to labels\n");
-        exit(-10);
-    }
-    // add the jmp code to indicate that we're not evaluating the args
-
-    add_element(&code_array, JEG);
-    // specify where to jump to
-    int64_t labelIdx = code_array.size;
-    add_element(&code_array, -1);
-    // we do a pass on the args and store their label names in a map
-    // label names have to be unique
-    Env lvarEnvNew = initializeEnv();
-    lvarEnvNew.parent = lvarEnv;
-
-    Expr *arg1 = list->as.list.items[1]; 
-    for (size_t i = 0; i < arg1->as.list.count; i++) {
-        add_binding(&lvarEnvNew, arg1->as.list.items[i]->as.list.items[0]->as.symbol, -1);
-        lvarEnvNew.val[i].index = initializeInt64_arr();
-    }
-    //
-    if (list->as.list.items[1]->as.list.count <= 0) {
-        printf("Error: wrong labels expression\n");
-        exit(-6);
-    }
-
-    for(size_t i = 0; i < arg1->as.list.count; i++) {
-        if (arg1->as.list.items[i]->type != EXPR_LIST) {
-            printf("Error: wrong labels arg type expression\n");
-            exit(-6);
-        }
-        // evaluate the right most arg
-        int64_t jmpLoc = code_array.size;
-        add_binding(&lvarEnvNew, arg1->as.list.items[i]->as.list.items[0]->as.symbol, jmpLoc);
-        // add size
-        ssize_t varIdx = lookup(&lvarEnvNew, arg1->as.list.items[i]->as.list.items[0]->as.symbol);
-
-        Expr *arg = arg1->as.list.items[i]->as.list.items[1];
-
-        lvarEnvNew.val[varIdx].arg_count = arg->as.list.items[1]->as.list.count;
-
-        Compiler(arg, env, &lvarEnvNew);
-
-    }
-
-    // now we update the jmpLoc with negative -1's
-    for(ssize_t j = 0; j < lvarEnvNew.count; j++) {
-        if (lvarEnvNew.val[j].index.size > 0) {
-            for (size_t i = 0; i < lvarEnvNew.val[j].index.size; i++ ) {
-                add_at_index(&code_array, lvarEnvNew.val[j].location, lvarEnvNew.val[j].index.code[i]);
-            }
-        }
-        free(lvarEnvNew.val[j].index.code);
-    }
-
-    int64_t labelWidth = code_array.size;
-    add_at_index(&code_array, labelWidth, labelIdx);
-    Expr *arg2 = list->as.list.items[2];
-
-    Compiler(arg2, env, &lvarEnvNew);
-
-    free_env(&lvarEnvNew);
-
-}
-
-
-/*
- *  code
- */
-void compile_code(Expr *list, Env *env, Env *lvarEnv) {
-
-    if (list->as.list.count != 3) {
-        printf("Error: invalid numbers of args to code\n");
-        exit(-10);
-    }
-
-    // now we deal with multiple args
-    Env envNew = initializeEnv();
-    envNew.parent = env;
-
-
-    for(size_t i = 0; i < list->as.list.items[1]->as.list.count; i++) {
-
-        char *arg1 = list->as.list.items[1]->as.list.items[i]->as.symbol;
-        add_binding(&envNew, arg1, global_stackPos);
-        global_stackPos++;
-    }
-
-    // can take zero args
-    Expr *arg2 = list->as.list.items[2];
-    Compiler(arg2, &envNew, lvarEnv);
-
-    // ret opcode to pop of the stack and jump to location/next instr  
-    add_element(&code_array, RET);
-    free_env(&envNew);
-
-
-}
-
-/*
- * labelcall
- */
-void compile_labelcall(Expr *list, Env *env, Env *lvarEnv) {
-    if (list->as.list.count < 1) {
-        printf("Error: invalid numbers of args to labelcall\n");
-        exit(-10);
-    }
-
-    char *lvar = list->as.list.items[1]->as.symbol;
-    // lookup lvar in the lvarEnv
-    ssize_t lvarEnvIndex = lookup(lvarEnv, lvar);
-    if (lvarEnvIndex == -1) {
-        printf("Error: lvar does not exist\n");
-        exit(-10);
-    }
-
-    // check if arg size if valid for the called label 
-    if ((list->as.list.count - 2) != lvarEnv->val[lvarEnvIndex].arg_count) {
-        printf("Error: Invalid number of args to code '%s'\n", lvarEnv->val[lvarEnvIndex].symbol);
-        exit(-10);
-    }
-    // push args first and then we check
-    for(size_t i = 2; i < list->as.list.count; i++) {
-        Expr *arg = list->as.list.items[i];
-        Compiler(arg, env, lvarEnv);
-    }
-
-    //emit return 2 location
-    add_element(&code_array, KEG);
-    int64_t ret_index = code_array.size;
-    add_element(&code_array, -1);
-
-
-    // emit jump to the lvarcode location
-    add_element(&code_array, JEG); // jump opcode
-    int64_t lvarLoc = lvarEnv->val[lvarEnvIndex].location;
-    if (lvarLoc == -1) {
-        int64_t index = code_array.size;
-        add_element(&code_array, -1);        
-        add_element(&lvarEnv->val[lvarEnvIndex].index, index);
-    } else {
-        add_element(&code_array, lvarLoc);
-    }
-
-    //
-    int64_t ret_loc = code_array.size;
-    add_at_index(&code_array, ret_loc, ret_index);
-
-
 
 }
