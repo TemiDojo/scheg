@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
+#include "analysis.h"
 #include "global_helper.h"
 #include "opcodes.h"
 
@@ -44,14 +45,17 @@ struct Expr {
 // Struct for the environment variable
 struct Val {
     char *symbol;
+
     int64_t stack_location;
 };
 
 typedef struct Env {
     struct Val *val;
     size_t count;
+    size_t sp_diff;
     size_t capacity;
     struct Env *parent;  // Now refers to the tagged struct
+    struct Env *child;  
 } Env;
 
 Int64_Array code_array;
@@ -101,13 +105,17 @@ void compile_vectorAppend(Expr *list, Env *env);
 void compile_begin(Expr *list, Env *env);
 // Env
 Env initializeEnv();
+void init_binding(Env *env, char *symbol);
 void add_binding(Env *env, char *symbol, int64_t stack_location);
 int64_t lookup(Env *env, char *symbol);
+int64_t  recurse_env(Env *env, size_t index);
 // Helper
 void add_to_list(ExprList *list, Expr *item);
 void display_parsed_list(Expr *parsed);
 void free_expr(Expr *parsed);
 void free_env(Env *env);
+int64_t getEnv(Env *env, char *symbol, size_t env_diff);
+void set_loc(Env *env);
 
 
 Env initializeEnv() {
@@ -118,7 +126,68 @@ Env initializeEnv() {
     return env;
 }
 
-void add_binding(Env *env, char *symbol, int64_t stack_location) {
+
+void set_loc(Env *env) {
+
+    size_t j = 0;
+    for(int i = env->count-1; i > 0; i++) {
+        env->val[i].stack_location = j;
+        j++;
+    }
+
+}
+
+
+int64_t getEnv(Env *env, char *symbol, size_t env_diff) {
+    
+    const char *s1 = symbol;
+    
+    set_loc(env);
+    for (size_t i = 0; i < env->count; i++) {
+        const char *s2 = env->val[i].symbol;
+        if (strcmp(s1, s2) == 0) {
+            return (env->val[i].stack_location + env_diff);
+        }
+
+    }
+    
+    if (env->parent != NULL) {
+        return getEnv(env->parent, symbol, env_diff + env->sp_diff);
+    }
+    
+    return -1;
+
+}
+
+
+void init_binding(Env *env, char *symbol) {
+    if (env->count >= env->capacity) {
+        env->capacity *= 2;
+        env->val = realloc(env->val, env->capacity * sizeof(struct Val));
+        if (env->val == NULL) {
+            printf("Error: allocation failure\n");
+            exit(-1);
+        }
+    }
+
+    const char *s1 = symbol;
+    int64_t stack_pos = lookup(env, symbol);
+
+
+    if (stack_pos == -1 ) {
+        env->val[env->count].symbol = calloc(strlen(symbol)+1, sizeof(char));
+        if (env->val[env->count].symbol == NULL) {
+            printf("Error: allocation failure\n");
+            exit(-1);
+        }
+        printf("initi binding %s\n", symbol);
+        strcpy(env->val[env->count].symbol, s1);
+        env->val[env->count].stack_location = 0;
+        env->count++;
+    }
+}
+
+void add_binding(Env *env, char *symbol, int64_t location) {
     if (env->count >= env->capacity) {
         env->capacity *= 2;
         env->val = realloc(env->val, env->capacity * sizeof(struct Val));
@@ -139,10 +208,11 @@ void add_binding(Env *env, char *symbol, int64_t stack_location) {
             exit(-1);
         }
         strcpy(env->val[env->count].symbol, s1);
-        env->val[env->count].stack_location = stack_location;
+        env->val[env->count].stack_location = location;
         env->count++;
     }
 }
+
 
 int64_t lookup(Env *env, char *symbol) {
 
@@ -151,7 +221,7 @@ int64_t lookup(Env *env, char *symbol) {
     for (size_t i = 0; i < env->count; i++) {
         const char *s2 = env->val[i].symbol;
         if (strcmp(s1, s2) == 0) {
-            return env->val[i].stack_location;
+            return i;
         }
 
     }

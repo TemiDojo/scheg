@@ -7,6 +7,7 @@
 #include <unistd.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
+#include "./includes/analysis.h"
 #include "./includes/parser.h"
 #include "./includes/compiler.h"
 #include "./includes/opcodes.h"
@@ -86,7 +87,6 @@ int main(int argc, char **argv) {
         Parser p = new_parser(expr);
         p.length = expr_len;
         while(p.pos < (p.length-1)) {
-            global_stackPos = -1;
             code_array = initializeInt64_arr();
 
             // printf("expression to parse: %s\n", p.source + p.pos);
@@ -138,7 +138,6 @@ int main(int argc, char **argv) {
         p.length = char_read;
 
         while(p.pos < (p.length)) {
-            global_stackPos = -1;
             code_array = initializeInt64_arr();
 
             // printf("expression to parse: %s\n", p.source + p.pos);
@@ -250,34 +249,31 @@ void Compiler(Expr *parsed, Env *env) {
             // tag the value
             tag_num = tagInt(parsed->as.int_val);
             add_element(&code_array, tag_num);
-            stack_pointer++;
-            global_stackPos++;
+            env->sp_diff++;
             break;
         case EXPR_CHAR: // characters
             add_element(&code_array, KEG);
             // tag the value
             tag_num = tagChar(parsed->as.char_val);
             add_element(&code_array, tag_num);
-            global_stackPos++;
+            env->sp_diff++;
             break;
         case EXPR_BOOL: // booleans
             add_element(&code_array, KEG);
             // tag the value
             tag_num = tagBool(parsed->as.bool_val);
             add_element(&code_array, tag_num);
-            global_stackPos++;
+            env->sp_diff++;
             break;
         case EXPR_SYMBOL:
-            int64_t stack_pos = lookup(env, parsed->as.symbol);
+            int64_t stack_pos = getEnv(env, parsed->as.symbol, 0);
             if (stack_pos == -1) {
                 printf("Error: unbound variable: %s\n", parsed->as.symbol);
                 exit(-2);
             } else {
                 add_element(&code_array, KLEG);
                 add_element(&code_array, stack_pos);
-                stack_pointer++;
             }
-            //global_stackPos++;
             break;
         case EXPR_LIST:
             compile_list(parsed, env);
@@ -289,12 +285,13 @@ void Compiler(Expr *parsed, Env *env) {
     }
 }
 
+
 void compile_list(Expr *list, Env *env) {
 
     // empty list
     if (list->as.list.count == 0) {
         add_element(&code_array, KEG);
-        global_stackPos++;
+        env->sp_diff++;
         add_element(&code_array, MT_MASK);
         return;
     }
@@ -343,8 +340,16 @@ void compile_list(Expr *list, Env *env) {
     } else if(strcmp(op_name, "let") == 0) {
         Env envnew = initializeEnv();
         envnew.parent = env;
+        //env->child = &envnew;
+        // recursively run to get all enn
+        //varanalysis_let(list, env);
+        // reverse the location for each env
+        //set_loc(env); 
+
         compile_let(list, &envnew);
-        free_env(&envnew);
+        //set_loc(
+        //free_env(&envnew);
+
     // conditionals
     } else if(strcmp(op_name, "if") == 0) {
         compile_if(list, env);
@@ -613,7 +618,8 @@ void compile_let(Expr *list, Env *env) {
         Expr *arg = arg1->as.list.items[i]->as.list.items[1];
         Compiler(arg, env);
         // let should support every type
-        add_binding(env, arg1->as.list.items[i]->as.list.items[0]->as.symbol, global_stackPos);
+        char *symbol = arg1->as.list.items[i]->as.list.items[0]->as.symbol;
+        init_binding(env, symbol);
     }
    // free(env);
    size_t i;

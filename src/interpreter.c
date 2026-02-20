@@ -39,7 +39,6 @@ int main(int argc, char **argv) {
 void interpret() {
     size_t jump_loc = 0;
     int64_t ret_index = 0;
-    int64_t env_diff = 0;
     int64_t res;
     int64_t arg1;
     int64_t arg2;
@@ -62,12 +61,7 @@ void interpret() {
                 read_word(); // read the index
                 int64_t env_pos = data;
                 // get the value
-                int64_t env_val;
-                if (env_pos <= 0) {
-                    env_val = get(env_diff);
-                } else {
-                    env_val = get(env_pos - env_diff);
-                }
+                int64_t env_val = get(env_pos);
                 // push onto the stack
                 push(env_val); 
                 break;
@@ -92,7 +86,6 @@ void interpret() {
                 print_res(result);
                 puts("");
 
-                env_diff = 0;
                 popN(stack.size - 1);
                 break;
             case cJEG:
@@ -124,7 +117,6 @@ void interpret() {
                 res = arg1 + 1;
                 push(tagInt(res));
                 ret_index = stack.size - 1;
-                //env_diff++;
                 break;
             case SEG1:  // sub1
                 // TODO: check if of type int/valid type
@@ -133,7 +125,6 @@ void interpret() {
                 res = arg1 - 1;
                 push(tagInt(res));
                 ret_index = stack.size - 1;
-                //env_diff++;
                 break;
             case CEG:   // char2int
                 puts("CEG");
@@ -166,7 +157,6 @@ void interpret() {
                 }
                 push(res);
                 ret_index = stack.size - 1;
-                //env_diff++;
                 break;
             case sBEG:  // boolean?
                 puts("sBEG");
@@ -178,7 +168,6 @@ void interpret() {
                 }
                 push(res);
                 ret_index = stack.size - 1;
-                //env_diff++;
                 break;
             case ZEG:   // zero?
                 puts("ZEG");
@@ -201,7 +190,6 @@ void interpret() {
                 res = arg1 - arg2;
                 push(tagInt(res));
                 ret_index = stack.size - 1;
-                env_diff++;
                 break;
             case AEG:
                 puts("ADD");
@@ -212,7 +200,6 @@ void interpret() {
                 res = arg1 + arg2;
                 push(tagInt(res));
                 ret_index = stack.size - 1;
-                env_diff++;
                 break;
             case MEG:
                 // TODO: check if its of type int/valid type
@@ -222,7 +209,6 @@ void interpret() {
                 res = arg1 * arg2;
                 push(tagInt(res));
                 ret_index = stack.size - 1;
-                env_diff++;
                 break;
             case LEG:
                 // real number required
@@ -236,7 +222,6 @@ void interpret() {
                 }
                 push(res);
                 ret_index = stack.size - 1;
-                env_diff++;
                 break;
             case EEG:
                 puts("EEG");
@@ -250,7 +235,6 @@ void interpret() {
                 }
                 push(res);
                 ret_index = stack.size - 1;
-                env_diff++;
                 break;
             case CONSEG:
                 puts("CONSEG"); 
@@ -275,7 +259,6 @@ void interpret() {
                 }
                 push(tag_val);
                 ret_index = stack.size -1;
-                env_diff++;
                 break;
             case CAREG:
                 puts("CAREG");
