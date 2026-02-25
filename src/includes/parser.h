@@ -32,6 +32,7 @@ Expr* parse_expr(Parser *p);
 Expr* parse_symbol(Parser *p);
 Expr* parse_string(Parser *p);
 Expr* parse_vector(Parser *p);
+void compile_stream(Parser *p, FILE *fptr);
 
 
 /*

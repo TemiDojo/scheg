@@ -1,0 +1,54 @@
+(let ((my-func (lambda (x) (+ x 1)))) (funcall my-func 5) (let ((a 20)) (* a (funcall my-func 3))))
+
+
+(let ((b 2))
+    (let ((a (lambda (y) (cons (let ((z 30)) (lambda () (+ y z))) ()))))
+        (let ((x (cdr (a 20))))
+            (x 3))))
+
+
+(let ((b 2))
+    (let ((a (lambda (y) (cons (let ((z 30)) (lambda () (+ y z))) 7))))
+        (let ((x (cdr (a 20))))
+            (x 3))))
+
+
+(let ((b 2))
+    (let ((a (lambda (y) (cons (let ((z 30)) (lambda () (+ y z))) (lambda (c) (- c b))))))
+        (let ((x (cdr (a 20))))
+            (x 3))))
+
+
+(let ((b 2))
+    (let ((a (lambda (y) (cons (let ((z 11)) (lambda () (+ y z))) (lambda (a) (- a b))))))
+        ((cdr (a 50)) 10)))
+
+(let ((b 2))(let ((a (lambda (y) (cons (let ((z 11)) (lambda () (+ y z))) (lambda (a) (- a b))))))((car (a 50)))))
+
+(let ((b 2))
+    (let ((a (lambda (y) (cons (let ((z 11)) (lambda () (+ y z))) (lambda (a) (- a b))))))
+        ((car (a 50)))))
+
+
+(let ((a 10) (b 20))
+  (let ((c 30))
+    (let ((d 40))
+      (+ a (+ b (+ c d))))))
+
+(let ((x 50))
+  (let ((y (+ x x)))  ; y = 100
+    (let ((z 25))
+      (+ x (let ((x 10)) (+ x y))    ; 10 + 100 = 110
+         z))))         ; Final: 50 + 110 + 25 = 185
+
+
+         (let ((a 1)) (let ((c 10)(b (lambda (x) (+ 20 (+ a (+ a (+ 100 100)))))) (funcall 4))))
+
+
+(let ((b 2))
+    (let ((a (lambda (y) (cons (let ((z 11)) (lambda () (+ y z))) (lambda (a) (- a b))))))
+        b))
+
+(let ((b 2))
+    (let ((a (lambda (y) (lambda () (+ y b)))))(funcall a 50))
+        ()))

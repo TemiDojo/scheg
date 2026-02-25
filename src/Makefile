@@ -5,7 +5,7 @@ CFLAGS= -Wall -Wextra -Wpedantic -Wvla -Wshadow -g -fsanitize=address,undefined
 
 all: $(OBJDIR)compile $(OBJDIR)interpret
 
-$(OBJDIR)compile: compiler.c ./includes/analysis.h ./includes/compiler.h ./includes/global_helper.h ./includes/parser.h ./includes/opcodes.h
+$(OBJDIR)compile: compiler.c ./includes/compiler.h ./includes/global_helper.h ./includes/parser.h ./includes/opcodes.h
 	$(CC) compiler.c $(CFLAGS) -o $@
 
 interpret: interpreter.c ./includes/interpreter.h ./includes/global_helper.h

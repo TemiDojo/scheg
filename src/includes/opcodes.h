@@ -48,4 +48,11 @@
 #define VSETEG  0x30E5
 #define VAPPEG  0x32E5
 
+// LabelCall
+#define LABELEGS    0x33E5
+#define CLOSEURLEG  0x35E5
+#define CLEG        0x36E5
+#define HEG         0x37E5
+#define BLEG       0x38E5
+
 #endif

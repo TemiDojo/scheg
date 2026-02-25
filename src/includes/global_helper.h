@@ -21,6 +21,8 @@ typedef struct {
 #define PAIR_TAG    0b001
 #define STR_TAG     0b101
 #define VEC_TAG     0b010
+#define CLOS_TAG    0b110
+
 /*
  * Function Declaration
  */
@@ -30,18 +32,21 @@ int64_t tagBool(int64_t bools);
 uintptr_t tagPair(uintptr_t ptr);
 uintptr_t tagStr(uintptr_t ptr);
 uintptr_t tagVec(uintptr_t ptr);
+uintptr_t tagClosure(uintptr_t ptr);
 int64_t untagInt(int64_t integer);
 int64_t untagBool(int64_t bools);
 int64_t untagChar(int64_t chars);
 uintptr_t untagPair(uintptr_t ptr);
 uintptr_t untagStr(uintptr_t ptr);
 uintptr_t untagVec(uintptr_t ptr);
+uintptr_t untagClosure(uintptr_t ptr);
 bool isInt(int64_t integer);
 bool isChar(int64_t chars);
 bool isBool(int64_t bools);
 bool isPair(uintptr_t ptr);
 bool isStr(uintptr_t ptr);
 bool isVec(uintptr_t ptr);
+bool isClosure(uintptr_t ptr);
 bool isMtList(int64_t mtlist);
 bool isValidType(int64_t val);
 bool is_symbol_char(char c);
@@ -97,7 +102,9 @@ uintptr_t tagVec(uintptr_t ptr) {
     return ptr | VEC_TAG;
 }
 
-
+uintptr_t tagClosure(uintptr_t ptr) {
+    return ptr | CLOS_TAG;
+}
 
 /*
  * Functions to untag type
@@ -125,6 +132,10 @@ uintptr_t untagStr(uintptr_t ptr) {
 
 uintptr_t untagVec(uintptr_t ptr) {
     return ptr & ~VEC_TAG;
+}
+
+uintptr_t untagClosure(uintptr_t ptr) {
+    return ptr & ~CLOS_TAG;
 }
 
 /*
@@ -162,15 +173,25 @@ bool isVec(uintptr_t ptr) {
     return (ptr & 0b111) == VEC_TAG;
 }
 
+bool isClosure(uintptr_t ptr) {
+    return (ptr & 0b110) == CLOS_TAG;
+}
+
 /*
  * HELPER functions for initializing and managing the data array
  */
-Int64_Array initializeInt64_arr() {
-    Int64_Array code_array;
-    code_array.size = 0;
-    code_array.capacity = 1;
-    code_array.code = calloc(code_array.capacity, sizeof(int64_t));
+Int64_Array *initializeInt64_arr() {
+    Int64_Array *code_array = malloc(sizeof(Int64_Array));
+    code_array->size = 0;
+    code_array->capacity = 1;
+    code_array->code = calloc(code_array->capacity, sizeof(int64_t));
     return code_array;
+}
+
+void freeInt64_Array(Int64_Array *arr) {
+    if (arr == NULL) return;
+    free(arr->code);
+    free(arr);
 }
 
 void add_element(Int64_Array *code_array, int64_t code) {

@@ -16,11 +16,12 @@
 
 
 int64_t data;
+int64_t label_segment_entry;
 int64_t instr;
 FILE *fp;
 size_t codes_read;
 //size_t stack_rsp;
-Int64_Array stack;
+Int64_Array *stack;
 
 
 
@@ -36,28 +37,28 @@ void print_res(int64_t res);
 
 
 void push(int64_t val) {
-    add_element(&stack, val);
+    add_element(stack, val);
 }
 
 void popN(size_t count) {
-    stack.size-=count;
+    stack->size-=count;
 }
 
 int64_t pop() {
-    int64_t retval = stack.code[stack.size-1];
-    stack.size--;
+    int64_t retval = stack->code[stack->size-1];
+    stack->size--;
     return retval;
 }
 
 int64_t get(int64_t index) {
-    return stack.code[index];
+    return stack->code[index];
 }
 
 
 void visualize_stack() {
     puts(BOX_TOP);
-    for(size_t i = 0; i < stack.size; i++) {
-        printf(BOX_SIDE "      0x%016" PRIx64 "      " BOX_SIDE "\n", stack.code[i]);
+    for(size_t i = 0; i < stack->size; i++) {
+        printf(BOX_SIDE "      0x%016" PRIx64 "      " BOX_SIDE "\n", stack->code[i]);
     }
 
     printf(BOX_BOTTOM " <- rsp\n");

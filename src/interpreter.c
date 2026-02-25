@@ -28,7 +28,13 @@ int main(int argc, char **argv) {
     }
     // Now create a virtual stack to push data
     stack = initializeInt64_arr();
-
+    // first find the start of the label section
+    // when reading:
+    int64_t label_offset;
+    fread(&label_offset, sizeof(int64_t), 1, fp);
+    label_segment_entry = label_offset;
+    fseek(fp, 0, SEEK_SET);
+    read_word();
     puts("********** BEGIN INTERPRETING ***********");
     interpret();
     puts("*********** INTERPRETER DONE ************");
@@ -42,13 +48,20 @@ void interpret() {
     int64_t res;
     int64_t arg1;
     int64_t arg2;
-    bool stop = false;
+    bool interpret = true;
     char* con_ptr = heap;
     char* dum_ptr;
     uintptr_t tag_val;
     int64_t size;
+    int64_t frame_pointer = 0;
+    while (interpret) {
 
-    while (true) {
+        for(size_t i = 0; i < stack->size; i++) {
+            printf("  stack[%ld] = ", i);
+            print_res(stack->code[i]);
+            printf("\n");
+        }
+
         switch (get_instr()) {
             // Load Instr
             case KEG:
@@ -56,15 +69,32 @@ void interpret() {
                 read_word();
                 push(data);
                 break;
-            case KLEG:
+            case KLEG: {
                 puts("KLEG");
+
                 read_word(); // read the index
+                             
                 int64_t env_pos = data;
-                // get the value
+                env_pos = (stack->size - (env_pos));
                 int64_t env_val = get(env_pos);
+
                 // push onto the stack
                 push(env_val); 
                 break;
+                       }
+            case BLEG: {
+                puts("BLEG");
+                read_word();
+
+                int64_t env_pos = data;
+                env_pos = ((frame_pointer - 2) - env_pos);
+
+                int64_t env_val = get(env_pos);
+
+                push(env_val);
+
+                break;
+                       }
             case FLEG:
                 puts("FLEG");
                 read_word();
@@ -73,7 +103,7 @@ void interpret() {
                 // clear the env values
                 popN(data);
                 push(dummy_ret);
-                ret_index = stack.size - 1;
+                ret_index = stack->size - 1;
                 break;
             case SIKeEG:
                 puts("SIKeEG");
@@ -86,7 +116,7 @@ void interpret() {
                 print_res(result);
                 puts("");
 
-                popN(stack.size - 1);
+                popN(stack->size - 1);
                 break;
             case cJEG:
                 puts("cJEG");
@@ -104,8 +134,8 @@ void interpret() {
             case JEG:
                 puts("JEG");
                 read_word();
-                jump_loc = (data * 8) - (codes_read * 8);
-                fseek(fp, jump_loc, SEEK_CUR);
+                jump_loc = (data * 8) + label_segment_entry;
+                fseek(fp, jump_loc, SEEK_SET);
 
                 break;
             // Unary Primitives
@@ -116,7 +146,7 @@ void interpret() {
                 arg1 = untagInt(pop());
                 res = arg1 + 1;
                 push(tagInt(res));
-                ret_index = stack.size - 1;
+                ret_index = stack->size - 1;
                 break;
             case SEG1:  // sub1
                 // TODO: check if of type int/valid type
@@ -124,28 +154,28 @@ void interpret() {
                 arg1 = untagInt(pop());
                 res = arg1 - 1;
                 push(tagInt(res));
-                ret_index = stack.size - 1;
+                ret_index = stack->size - 1;
                 break;
             case CEG:   // char2int
                 puts("CEG");
                 arg1 = pop();
                 res = (arg1 >> 6) | INT_TAG;
                 push(res);
-                ret_index = stack.size - 1;
+                ret_index = stack->size - 1;
                 break;
             case IEG:   // int2char 
                 puts("IEG");
                 arg1 = pop();
                 res = (arg1 << 6) | CHAR_TAG;
                 push(res);
-                ret_index = stack.size - 1;
+                ret_index = stack->size - 1;
                 break;
             case NEG:   // neg
                 puts("NEG");
                 arg1 = untagInt(pop());
                 res = -arg1;
                 push(tagInt(res));
-                ret_index = stack.size - 1;
+                ret_index = stack->size - 1;
                 break;
             case sIEG:  // integer?
                 puts("sIEG");
@@ -156,7 +186,7 @@ void interpret() {
                     res = (tagBool(0));
                 }
                 push(res);
-                ret_index = stack.size - 1;
+                ret_index = stack->size - 1;
                 break;
             case sBEG:  // boolean?
                 puts("sBEG");
@@ -167,7 +197,7 @@ void interpret() {
                     res = (tagBool(0));
                 }
                 push(res);
-                ret_index = stack.size - 1;
+                ret_index = stack->size - 1;
                 break;
             case ZEG:   // zero?
                 puts("ZEG");
@@ -178,7 +208,7 @@ void interpret() {
                     res = (tagBool(0));
                 }
                 push(res);
-                ret_index= stack.size - 1;
+                ret_index= stack->size - 1;
                 break;
             // Binary instr
             case SEG:
@@ -189,7 +219,7 @@ void interpret() {
                 arg2 = untagInt(pop());
                 res = arg1 - arg2;
                 push(tagInt(res));
-                ret_index = stack.size - 1;
+                ret_index = stack->size - 1;
                 break;
             case AEG:
                 puts("ADD");
@@ -199,7 +229,7 @@ void interpret() {
                 arg2 = untagInt(pop());
                 res = arg1 + arg2;
                 push(tagInt(res));
-                ret_index = stack.size - 1;
+                ret_index = stack->size - 1;
                 break;
             case MEG:
                 // TODO: check if its of type int/valid type
@@ -208,7 +238,7 @@ void interpret() {
                 arg2 = untagInt(pop());
                 res = arg1 * arg2;
                 push(tagInt(res));
-                ret_index = stack.size - 1;
+                ret_index = stack->size - 1;
                 break;
             case LEG:
                 // real number required
@@ -221,7 +251,7 @@ void interpret() {
                     res = (tagBool(0));
                 }
                 push(res);
-                ret_index = stack.size - 1;
+                ret_index = stack->size - 1;
                 break;
             case EEG:
                 puts("EEG");
@@ -234,7 +264,7 @@ void interpret() {
                     res = (tagBool(0));
                 }
                 push(res);
-                ret_index = stack.size - 1;
+                ret_index = stack->size - 1;
                 break;
             case CONSEG:
                 puts("CONSEG"); 
@@ -258,7 +288,7 @@ void interpret() {
                     puts("TRUE");
                 }
                 push(tag_val);
-                ret_index = stack.size -1;
+                ret_index = stack->size -1;
                 break;
             case CAREG:
                 puts("CAREG");
@@ -271,7 +301,7 @@ void interpret() {
                 int64_t car_val;  
                 memcpy(&car_val, car_ptr - (1 * sizeof(int64_t)), sizeof(int64_t));
                 push(car_val);
-                ret_index = stack.size - 1;
+                ret_index = stack->size - 1;
                 
                 break;
             case CDREG:
@@ -285,7 +315,7 @@ void interpret() {
                 int64_t cdr_val;
                 memcpy(&cdr_val, cdr_ptr - (2 * sizeof(int64_t)), sizeof(int64_t));
                 push(cdr_val);
-                ret_index = stack.size - 1;
+                ret_index = stack->size - 1;
 
                 break;
             case STREG:
@@ -311,7 +341,7 @@ void interpret() {
                 tag_val = tagStr((uintptr_t) con_ptr);
 
                 push(tag_val);
-                ret_index = stack.size - 1;
+                ret_index = stack->size - 1;
                 break;
             case REFEG:
                 arg1 = pop();
@@ -343,7 +373,7 @@ void interpret() {
                     dum_ptr--;
                 }
                 push(tagChar(res));
-                ret_index = stack.size - 1;
+                ret_index = stack->size - 1;
 
                 break;
             case SETEG:
@@ -388,7 +418,7 @@ void interpret() {
                 }
                 set_ptr = (uintptr_t)dum_ptr + (set_ptr - (uintptr_t)dum_ptr);
                 push(tagStr(set_ptr));
-                ret_index = stack.size - 1;
+                ret_index = stack->size - 1;
 
                 break;
             case APPEG:
@@ -423,7 +453,7 @@ void interpret() {
                 tag_val = tagStr((uintptr_t) con_ptr);
 
                 push(tag_val);
-                ret_index = stack.size - 1;
+                ret_index = stack->size - 1;
 
                 break;
             case VECTEG:
@@ -442,7 +472,7 @@ void interpret() {
                 tag_val = tagVec((uintptr_t) con_ptr);
 
                 push(tag_val);
-                ret_index = stack.size - 1;
+                ret_index = stack->size - 1;
 
                 break;
             case VREFEG:
@@ -478,7 +508,7 @@ void interpret() {
                     dum_ptr -= sizeof(int64_t);
                 }
                 push(res);
-                ret_index = stack.size - 1;
+                ret_index = stack->size - 1;
 
                 break;
             case VSETEG:
@@ -515,11 +545,12 @@ void interpret() {
 
                 vset_ptr = (uintptr_t) dum_ptr + (vset_ptr - (uintptr_t) dum_ptr);
                 push(tagVec(vset_ptr));
-                ret_index = stack.size - 1;
+                ret_index = stack->size - 1;
                 
                 break;
             case VAPPEG:
                 puts("VAPPEG");
+
                 read_word();
                 res = 0;
                 for(int64_t i = 0; i < data; i++) {
@@ -545,16 +576,94 @@ void interpret() {
 
                 tag_val = tagVec((uintptr_t) con_ptr);
                 push(tag_val);
+                ret_index = stack->size - 1;
 
-                ret_index = stack.size - 1;
                 break;
+            case CLOSEURLEG:
+                puts("CLOSURELEG");
+
+                read_word();
+                int64_t code_offset = data;
+                read_word();  // reads count - 2 (free var count)
+                int64_t nfree = data;
+
+                dum_ptr = con_ptr; 
+                memcpy(con_ptr, &code_offset, sizeof(int64_t));
+                con_ptr += sizeof(int64_t);
+
+                res = 0;
+                for(int64_t i = 0; i < nfree; i++) {
+                    res = pop();
+                    memcpy(con_ptr, &res, sizeof(int64_t));
+                    con_ptr+= sizeof(int64_t);
+                }
+                tag_val = tagClosure((uintptr_t) dum_ptr);
+                push(tag_val);
+
+                break;
+            case HEG: {
+                puts("HEG");
+
+                uintptr_t clos = get(frame_pointer);
+                read_word(); 
+                
+                if (!isClosure(clos)) {
+                    puts("not a closure");
+                    exit(-2);
+                }
+                clos = untagClosure(clos);
+
+                dum_ptr = (char *)clos;
+
+                dum_ptr += (data+1) * sizeof(int64_t);
+
+                memcpy(&res, dum_ptr, sizeof(int64_t));
+                push(res);
+                break;
+              }
+            case CLEG: {
+                puts("CLEG");
+
+                read_word();
+                uintptr_t arg = pop();
+                if (!isClosure(arg)) {
+                    puts("not a closure");
+                    exit(-2);
+                }
+                arg = untagClosure(arg);
+                
+                // read code_offset from the closure
+                memcpy(&jump_loc, (char*)arg, sizeof(int64_t));  // ← use arg, not dum_ptr
+                jump_loc = (jump_loc * 8) + label_segment_entry;
+
+                push(frame_pointer);
+                frame_pointer = stack->size;
+                
+                push(tagClosure(arg));
+                push(ftell(fp));
+                fseek(fp, jump_loc, SEEK_SET);
+                break;
+                }
             case RET:
-                // TODO: check the type before return
-                stop = true;
+                puts("RET");
+                read_word();
+
+                res = pop();
+                int64_t ret_loc = pop();
+                pop(); // pop the closure
+                frame_pointer = pop();
+                popN(data);
+                push(res);
+                fseek(fp, ret_loc, SEEK_SET);
+                break;
+            case LABELEGS:
+                interpret = false;
+                break;
             default:
+                interpret = false;
                 break;
         }
-        if (stop) break;
+
     } 
 }
 
@@ -647,7 +756,8 @@ void print_res(int64_t res){
             ptr-=8;
         }
         printf(")");
-
+    } else if (isClosure((uintptr_t) res)) {
+        printf("(closure)");
     }
 }
 
@@ -659,7 +769,7 @@ void read_word() {
 int64_t get_instr() {
 
     if (getc(fp) == EOF) {
-        instr = (int64_t) RET;
+        instr = (int64_t) -1;
     } else {
         fseek(fp, -1, SEEK_CUR);
     }
