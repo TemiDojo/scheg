@@ -20,7 +20,7 @@
     - Pairs - cons, car, cdr -> src/compiler.c
 - `-8`
     - String, string-ref, string-append, string-set -> src/compiler.c
-- `9`
+- `-9`
     - begin, vector, vector-set, vector-append, vector-ref -> src/compiler.c
 
 
