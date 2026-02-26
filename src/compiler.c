@@ -576,6 +576,7 @@ void compile_le(Expr *list, Env *env, Env *labelEnv, Int64_Array *segment) {
     Compiler(arg2, env, labelEnv, segment);
 
     add_element(segment, LEG);
+    dec_loc(env);
 }
 
 
@@ -591,6 +592,7 @@ void compile_eq(Expr *list, Env *env, Env *labelEnv, Int64_Array *segment) {
     Compiler(arg2, env, labelEnv, segment);
 
     add_element(segment, EEG);
+    dec_loc(env);
 }
 
 
@@ -664,6 +666,7 @@ void compile_if(Expr *list, Env *env, Env *labelEnv, Int64_Array *segment) {
     // emit test bool val
     Compiler(test, env, labelEnv, segment);
     add_element(segment, cJEG); // jump opcode
+    dec_loc(env);
                                     // 
     size_t idx = flow_segment->size;
     add_element(segment, 0); // jump location to l0
@@ -752,6 +755,11 @@ void compile_string(Expr *list, Env *env, Env *labelEnv, Int64_Array *segment) {
     }
     add_element(segment, STREG);
     add_element(segment, (int64_t)(list->as.list.count -1));
+
+    for(size_t i = 1; i < list->as.list.count; i++) {
+        dec_loc(env);
+    }
+    inc_loc(env);
 }
 
 void compile_stringRef(Expr *list, Env *env, Env *labelEnv, Int64_Array *segment) {
@@ -768,7 +776,8 @@ void compile_stringRef(Expr *list, Env *env, Env *labelEnv, Int64_Array *segment
     Compiler(arg2, env, labelEnv, segment);
 
     add_element(segment, REFEG);
-
+    
+    dec_loc(env);
 }
 
 void compile_stringSet(Expr *list, Env *env, Env *labelEnv, Int64_Array *segment) {
@@ -788,6 +797,8 @@ void compile_stringSet(Expr *list, Env *env, Env *labelEnv, Int64_Array *segment
 
     add_element(segment, SETEG);
 
+    dec_loc(env);
+    dec_loc(env);
 }
 
 void compile_stringAppend(Expr *list, Env *env, Env *labelEnv, Int64_Array *segment) {
@@ -806,6 +817,10 @@ void compile_stringAppend(Expr *list, Env *env, Env *labelEnv, Int64_Array *segm
     add_element(segment, APPEG);
     add_element(segment, (int64_t)(list->as.list.count - 1));
 
+    for(size_t i = 1; i < list->as.list.count; i++) {
+        dec_loc(env);
+    }
+    inc_loc(env);
 }
 
 /*
@@ -827,6 +842,11 @@ void compile_vector(Expr *list, Env *env, Env *labelEnv, Int64_Array *segment) {
     add_element(segment, VECTEG);
     add_element(segment, (int64_t)(list->as.list.count - 1));
 
+    for(size_t i = 1; i < list->as.list.count; i++) {
+        dec_loc(env);
+    }
+    inc_loc(env);
+
 }
 
 void compile_vectorRef(Expr *list, Env *env, Env *labelEnv, Int64_Array *segment) {
@@ -843,6 +863,8 @@ void compile_vectorRef(Expr *list, Env *env, Env *labelEnv, Int64_Array *segment
     Compiler(arg2, env, labelEnv, segment);
 
     add_element(segment, VREFEG);
+    
+    dec_loc(env);
 
 }
 
@@ -862,6 +884,9 @@ void compile_vectorSet(Expr *list, Env *env, Env *labelEnv, Int64_Array *segment
     Compiler(arg3, env, labelEnv, segment);
 
     add_element(segment, VSETEG);
+
+    dec_loc(env);
+    dec_loc(env);
 }
 
 void compile_vectorAppend(Expr *list, Env *env, Env *labelEnv, Int64_Array *segment) {
@@ -879,6 +904,11 @@ void compile_vectorAppend(Expr *list, Env *env, Env *labelEnv, Int64_Array *segm
     add_element(segment, VAPPEG);
     add_element(segment, (int64_t)(list->as.list.count - 1));
 
+    for(size_t i = 1; i < list->as.list.count; i++) {
+        dec_loc(env);
+    }
+
+    inc_loc(env);
 }
 
 /*
@@ -889,16 +919,24 @@ void compile_begin(Expr *list, Env *env, Env *labelEnv, Int64_Array *segment) {
         printf("Error: syntax-error: malformed begin\n");
         exit(-9);
     }
-    size_t i;
-    for (i = 1; i < list->as.list.count-1; i++) {
+
+    for (size_t i = 1; i < list->as.list.count; i++) {
         Expr *arg = list->as.list.items[i];
-        Compiler(arg, env, labelEnv, segment);
-        add_element(segment, SIKeEG);
+        if (i >= list->as.list.count - 1) {
+            Compiler(arg, env, labelEnv, segment);
+        } else {
+            Compiler(arg, env, labelEnv, segment);
+            add_element(segment, SIKeEG);
+            dec_loc(env);
+        }
     }
-    Expr *arg = list->as.list.items[i];
-    Compiler(arg, env, labelEnv, segment);
+
     add_element(segment, FLEG);
     add_element(segment, 0);
+
+    for(size_t i = 0; i < list->as.list.count; i++) {
+        dec_loc(env);
+    }
 
 }
 
