@@ -16,6 +16,13 @@
 - `-6` 
     - compile_let(Expr *list, Env *env) -> src/compiler.c
     - compile_if(Expr *list, Env *env)  -> src/compiler.c
+- `-7`
+    - Pairs - cons, car, cdr -> src/compiler.c
+- `-8`
+    - String, string-ref, string-append, string-set -> src/compiler.c
+- `9`
+    - begin, vector, vector-set, vector-append, vector-ref -> src/compiler.c
+
 
 ### ABSURDLYeg COOLeg OPCODEeg &eg TRANSLATIONSeg:)
 ```c
@@ -46,6 +53,30 @@
 #define MEG     0x41E5  // *
 #define LEG     0x51E5  // <
 #define EEG     0x61E5  // =
+
+// Pairs
+#define CONSEG  0x22E5  // (cons _ _)
+#define CAREG   0x23E5
+#define CDREG   0x24E5
+
+// String
+#define STREG   0x25E5  // String
+#define REFEG   0x26E5  // string-ref
+#define SETEG   0x27E5  // string-set
+#define APPEG   0x28E5  // string-append
+
+// Vector
+#define VECTEG  0x29E5  // vector
+#define VREFEG  0x20E5  // vector-ref
+#define VSETEG  0x30E3  // vector-set
+#define VAPPEG  0x32E5  // vector-append
+
+// LabelCall
+#define LABELEGS    0x33E5  // start of the label section
+#define CLOSEURLEG  0x35E5  // closure
+#define CLEG        0x36E5  // call opcode
+#define HEG         0x37E5  // push/get opcode from closure
+#define BLEG        0x38E5  // load from lambda args
 ```
 
 ### HOW TO RUN
