@@ -116,6 +116,7 @@ void compile_closure(Expr *list, Env *env, Env *labelEnv, Int64_Array *segment);
 void funcall(Expr *list, Env *env, Env *labelEnv, Int64_Array *segment);
 void compile_var(Expr *list, Env *env, Env *labelEnv, Int64_Array *segment); 
 Expr* create_closure(Expr *list, Env *env, Env *labelEnv, int64_t entry);
+void tailcall(Expr *list, Env *env, Env *labelEnv, Int64_Array *segment);
 // Env
 Env *initializeEnv();
 void init_binding(Env *env, char *symbol);
@@ -178,7 +179,16 @@ void dec_loc(Env *env) {
     }
 }
 
+int64_t count_loc(Env *env) {
 
+    if (env == NULL) return 0;
+    if (env->type == 0){
+        return env->count;
+    } else if (env->type == 2) {
+        return env->count + 2;
+    }
+    return 0;
+}
 
 struct Ret getEnv(Env *env, char *symbol) {
 
