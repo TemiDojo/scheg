@@ -53,8 +53,6 @@
 #define CLOSEURLEG  0x35E5
 #define CLEG        0x36E5
 #define HEG         0x37E5
-#define BLEG        0x38E5
-#define TAICLEG     0x39E5
-#define PEG         0x42E5
+#define BLEG       0x38E5
 
 #endif
