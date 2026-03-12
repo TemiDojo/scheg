@@ -32,6 +32,7 @@ Expr* parse_expr(Parser *p);
 Expr* parse_symbol(Parser *p);
 Expr* parse_string(Parser *p);
 Expr* parse_vector(Parser *p);
+Expr* parse_constant(Parser *p);
 void compile_stream(Parser *p, FILE *fptr);
 
 
@@ -318,6 +319,49 @@ Expr* parse_vector(Parser *p) {
     
     return list_expr;
 
+}
+
+Expr* parse_constant(Parser *p) {
+    advance(p); // consume ' 
+    Expr *list_expr = malloc(sizeof(Expr));
+    list_expr->type = EXPR_LIST;
+    list_expr->as.list.items = malloc(8 * sizeof(Expr*));
+    list_expr->as.list.count = 0;
+    list_expr->as.list.capacity = 8;
+
+    char *val = "constant-init";
+    Parser p_new = new_parser(val);
+    p_new.length = strlen(val);
+    Expr *item1 = parse_symbol(&p_new);
+
+    add_to_list(&list_expr->as.list,item1);
+
+    char *cName = gen_ccName();
+    Expr *opName = malloc(sizeof(Expr));
+    opName->type = EXPR_SYMBOL;
+    opName->as.symbol = cName;
+
+
+    add_to_list(&list_expr->as.list, opName);
+    
+    Expr *item;
+    if (peek(p) == '#' && advanceN(p) == '(') {
+        // vector
+        item = parse_vector(p);
+    } else if (peek(p) == '\"') {
+        // string
+        item = parse_string(p);
+    } else if (peek(p) == '(') {
+        item = parse_expr(p);
+    } else {
+        free_expr(list_expr);
+        return scheme_parse(p);
+    }
+
+    add_to_list(&list_expr->as.list, item);
+
+
+    return list_expr;
 }
 
 

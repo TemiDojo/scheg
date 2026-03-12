@@ -57,4 +57,11 @@
 #define TAICLEG     0x39E5
 #define PEG         0x42E5
 
+// Constant
+#define CPLEG       0x43E5
+#define CINEG       0x44E5
+#define CCREG       0x45E5
+#define CCINEG      0x46E5
+#define EEGs        0x47E5
+
 #endif

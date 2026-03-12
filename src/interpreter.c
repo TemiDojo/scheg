@@ -21,7 +21,7 @@ int main(int argc, char **argv) {
         return -1;
     }
     char *file_path = argv[1];
-    fp = fopen(file_path, "r");
+    fp = fopen(file_path, "r+");
     if (fp == NULL) {
         printf("Error opening file for read\n");
         return -1;
@@ -31,10 +31,21 @@ int main(int argc, char **argv) {
     // first find the start of the label section
     // when reading:
     int64_t label_offset;
+    int64_t init_offset;
+    int64_t constant_offset;
     fread(&label_offset, sizeof(int64_t), 1, fp);
     label_segment_entry = label_offset;
-    fseek(fp, 0, SEEK_SET);
-    read_word();
+
+    fread(&init_offset, sizeof(int64_t), 1, fp);
+
+    fread(&constant_offset, sizeof(int64_t), 1, fp);
+    constant_segment_offset = constant_offset;
+
+    fseek(fp, init_offset + 8, SEEK_SET);
+    printf("fp is :%ld\n" ,ftell(fp));
+
+    // fseek(fp, 0, SEEK_SET);
+    // read_word();
     puts("********** BEGIN INTERPRETING ***********");
     interpret();
     puts("*********** INTERPRETER DONE ************");
@@ -689,6 +700,21 @@ void interpret() {
                 frame_pointer = temp;
 
                 fseek(fp, jump_loc, SEEK_SET);
+                break;
+            case CCINEG:
+                puts("CCINEG");
+                read_word();
+                
+                jump_loc = (jump_loc * 8) + constant_segment_offset;
+                size_t saved_loc = ftell(fp);
+
+                fseek(fp, jump_loc, SEEK_SET);
+                read_word();
+                arg1 = pop();
+                fwrite(&arg1, sizeof(int64_t), 1, fp);
+
+                fseek(fp, saved_loc, SEEK_SET);
+
                 break;
             case RET:
                 puts("RET");

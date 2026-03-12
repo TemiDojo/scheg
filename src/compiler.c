@@ -15,8 +15,13 @@
 
 void compile_stream(Parser *p, FILE *fptr) {
     int expr_count = 0;
+
+    Env *labelEnv = initializeEnv();
+    flow_segment = initializeInt64_arr();
+
+    UnresolvedJmp *j = initializeJmp();
     while (p->pos < p->length) {
-        flow_segment = initializeInt64_arr();
+
 
         printf("\n========== EXPRESSION %d ==========\n", ++expr_count);
 
@@ -32,7 +37,7 @@ void compile_stream(Parser *p, FILE *fptr) {
         printf("\n");
 
         Env *env      = initializeEnv();
-        Env *labelEnv = initializeEnv();
+
 
         puts("── Compiling...");
         Compiler(parsed, env, labelEnv, flow_segment);
@@ -41,17 +46,22 @@ void compile_stream(Parser *p, FILE *fptr) {
 
         add_element(flow_segment, DEG);
 
-        printf("── Writing flow_segment (%zu words) to file\n", flow_segment->size);
-        fwrite(flow_segment->code, sizeof(int64_t), flow_segment->size, fptr);
 
-        freeInt64_Array(flow_segment);
         free_env(env);
-        for (size_t i = 0; i < labelEnv->count; i++) {
-            free_expr(labelEnv->val[i].closure);
-        }
-        free_env(labelEnv);
+
         free_expr(parsed);
     }
+
+    printf("── Writing flow_segment (%zu words) to file\n", flow_segment->size);
+    fwrite(flow_segment->code, sizeof(int64_t), flow_segment->size, fptr);
+
+    freeInt64_Array(flow_segment);
+
+    for (size_t i = 0; i < labelEnv->count; i++) {
+        free_expr(labelEnv->val[i].closure);
+    }
+    free_env(labelEnv);
+
     printf("\n========== COMPILE STREAM DONE ==========\n");
     printf("total expressions: %d\n", expr_count);
 }
@@ -61,6 +71,14 @@ int main(int argc, char **argv) {
 
     label_segment = initializeInt64_arr();
     add_element(label_segment, LABELEGS);
+
+    init_segment = initializeInt64_arr();
+    add_element(init_segment, CINEG);
+
+    constant_segment = initializeInt64_arr();
+    add_element(constant_segment, CPLEG);
+
+
 
     char  *source   = NULL;
     size_t src_len  = 0;
@@ -112,10 +130,27 @@ int main(int argc, char **argv) {
     int64_t label_offset = 0;
     fwrite(&label_offset, sizeof(int64_t), 1, fptr);
 
+    // write placeholder header
+    puts("── Writing constant_offset placeholder header");
+    int64_t constant_offset = 0;
+    fwrite(&constant_offset, sizeof(int64_t), 1, fptr);
+
+    // write placeholder header
+    puts("── Writing constant_offset placeholder header");
+    int64_t init_offset = 0;
+    fwrite(&init_offset, sizeof(int64_t), 1, fptr);
+
+    int64_t text_offset = ftell(fptr);
+    
+    // int64_t co = JEG;
+    // fwrite(&co, sizeof(int64_t), 1, fptr);
+    // fwrite(&co, sizeof(int64_t), 1, fptr);
+
     puts("\n========== PARSING & COMPILING ==========");
     Parser p = new_parser(source);
     p.length  = src_len;
     compile_stream(&p, fptr);
+
 
     // write label segment
     label_offset = ftell(fptr);
@@ -123,12 +158,42 @@ int main(int argc, char **argv) {
            label_offset, label_segment->size);
     fwrite(label_segment->code, sizeof(int64_t), label_segment->size, fptr);
 
+    // write init segment
+    init_offset = ftell(fptr);
+
+    add_element(init_segment, JEG);
+    add_element(init_segment, text_offset);
+    printf("\n── Writing init_segment at file offset: %ld (%zu words)\n",
+           init_offset, init_segment->size);
+    fwrite(init_segment->code, sizeof(int64_t), init_segment->size, fptr);
+
+
+
+    // write constant segment
+    constant_offset = ftell(fptr);
+    printf("\n── Writing init_segment at file offset: %ld (%zu words)\n",
+           constant_offset, constant_segment->size);
+    fwrite(constant_segment->code, sizeof(int64_t), constant_segment->size, fptr);
+
+
     // patch header with real label offset
     printf("── Patching header with label_offset: %ld\n", label_offset);
     fseek(fptr, 0, SEEK_SET);
     fwrite(&label_offset, sizeof(int64_t), 1, fptr);
 
+    // patch header with real init offset
+    printf("── Patching header with init_offset: %ld\n", init_offset);
+    // fseek(fptr, 0, SEEK_SET);
+    fwrite(&init_offset, sizeof(int64_t), 1, fptr);
+
+    // patch header with real constant offset
+    printf("── Patching header with constant_offset: %ld\n", label_offset);
+    // fseek(fptr, 0, SEEK_SET);
+    fwrite(&constant_offset, sizeof(int64_t), 1, fptr);
+
     freeInt64_Array(label_segment);
+    freeInt64_Array(constant_segment);
+    freeInt64_Array(init_segment);
     fclose(fptr);
     printf("── Closed output file: %s\n", out_path);
 
@@ -178,10 +243,8 @@ Expr* scheme_parse(Parser *p) {
         return scheme_parse(p);
     } else if (c == '\"') {
         return parse_string(p);
-    } else if (c == '\'' && cN == '#') {
-        advance(p);
-        advance(p);
-        return parse_vector(p);
+    } else if (c == '\'') {
+        return parse_constant(p);
     }  else {
         printf("Error: wrong expression '%c' \n", c);
         exit(-2);
@@ -325,6 +388,8 @@ void compile_list(Expr *list, Env *env, Env *labelEnv, Int64_Array *segment) {
         compile_le(list, env, labelEnv, segment);
     } else if(strcmp(op_name, "=") == 0) {
         compile_eq(list, env, labelEnv, segment);
+    } else if(strcmp(op_name, "eq?") == 0) {
+        compile_eqs(list, env, labelEnv, segment);
     // Local variables
     } else if(strcmp(op_name, "let") == 0) {
         Env *envnew = initializeEnv();
@@ -376,6 +441,8 @@ void compile_list(Expr *list, Env *env, Env *labelEnv, Int64_Array *segment) {
         funcall(list, env, labelEnv, segment);
     } else if (strcmp(op_name, "tailcall") == 0) {
         tailcall(list, env, labelEnv, segment);
+    } else if (strcmp(op_name, "constant-init") == 0) {
+        ccconstant(list, env, labelEnv, segment); 
     } else {
         char *symbol = strdup(op_name);
         int64_t lkId = lookup(labelEnv, symbol);
@@ -599,6 +666,22 @@ void compile_eq(Expr *list, Env *env, Env *labelEnv, Int64_Array *segment) {
     Compiler(arg2, env, labelEnv, segment);
 
     add_element(segment, EEG);
+    dec_loc(env);
+}
+
+
+void compile_eqs(Expr *list, Env *env, Env *labelEnv, Int64_Array *segment) {
+    if (list->as.list.count != 3) {
+        printf("Error: eqs expects 2 argument\n");
+        exit(-5);
+    }
+    Expr *arg1 = list->as.list.items[2];
+    Compiler(arg1, env, labelEnv, segment);
+
+    Expr *arg2 = list->as.list.items[1];
+    Compiler(arg2, env, labelEnv, segment);
+
+    add_element(segment, EEGs);
     dec_loc(env);
 }
 
@@ -1195,5 +1278,109 @@ void tailcall(Expr *list, Env *env, Env *labelEnv, Int64_Array *segment) {
     inc_loc(env);
 
 }
+
+
+void ccconstant(Expr *list, Env *env, Env *labelEnv, Int64_Array *segment) {
+
+    // gen new constant name
+    // char *cName = gen_ccName();
+    int64_t loc = constant_segment->size;
+    add_binding(labelEnv, list->as.list.items[1]->as.symbol, loc);
+
+    // gen complex_ref
+    Expr *c_ref = create_complex_ref(loc);
+    // compiler cref
+    compile_c_ref(c_ref, segment);
+    // Compiler(c_ref, env, labelEnv, segment);
+
+    // gen complex_init
+    // Expr *c_init = complex_init(list, loc);
+    // compile cinit
+    compile_c_init(list, env, labelEnv, init_segment, loc);
+    add_element(constant_segment, 0);
+
+    free_expr(c_ref);
+    // free_expr(c_init);
+
+}
+
+void compile_c_ref(Expr *list, Int64_Array *segment) {
+     
+    if (list->as.list.count != 2) {
+        printf("Error: constant-ref expects 1 argument\n");
+        exit(-10);
+    }
+    // Expr *arg = list->as.list.items[1];
+    // Compiler(arg, env, labelEnv, segment);
+    int64_t d = list->as.list.items[1]->as.int_val;
+    add_element(segment, CCREG);
+    add_element(segment, d);
+    // dec_loc(env);
+
+    // add_element();
+
+}
+
+void compile_c_init(Expr *list, Env *env, Env *labelEnv, Int64_Array *segment, int64_t loc) {
+    if (list->as.list.count != 3) {
+        printf("Error: constant-init expects 2 arguments\n");
+        exit(-10);
+    }
+    Expr *arg2 = list->as.list.items[2];
+    Compiler(arg2, env, labelEnv, segment);
+
+    // int64_t d = list->as.list.items[1]->as.int_val;
+    add_element(segment, CCINEG);
+    add_element(segment, loc);
+    dec_loc(env);
+    // add_element(segment, );
+
+}
+
+
+Expr * create_complex_ref(int64_t loc) {
+
+    Expr *list_expr = malloc(sizeof(Expr));
+    list_expr->type = EXPR_LIST;
+    list_expr->as.list.items = malloc(8 *sizeof(Expr*));
+    list_expr->as.list.count = 0;
+    list_expr->as.list.capacity = 8;
+
+    Expr *opName = malloc(sizeof(Expr));
+    opName->type = EXPR_SYMBOL;
+    opName->as.symbol = strdup("constant-ref");
+    add_to_list(&list_expr->as.list, opName);
+
+    Expr *c_loc = malloc(sizeof(Expr));
+    c_loc->type = EXPR_INT;
+    c_loc->as.int_val = loc;
+    add_to_list(&list_expr->as.list, c_loc);
+
+    return list_expr;
+}
+
+Expr *complex_init(Expr *list, int64_t loc) {
+
+    Expr *list_expr = malloc(sizeof(Expr));
+    list_expr->type = EXPR_LIST;
+    list_expr->as.list.items = malloc(8 * sizeof(Expr*));
+    list_expr->as.list.count = 0;
+    list_expr->as.list.capacity = 8;
+
+    Expr *opName = malloc(sizeof(Expr));
+    opName->type = EXPR_SYMBOL;
+    opName->as.symbol = strdup("constant-init");
+    add_to_list(&list_expr->as.list, opName);
+
+    Expr *c_loc = malloc(sizeof(Expr));
+    c_loc->type = EXPR_INT;
+    c_loc->as.int_val = loc;
+    add_to_list(&list_expr->as.list, c_loc);
+
+    add_to_list(&list_expr->as.list, list->as.list.items[1]);
+
+    return list_expr;
+}
+
 
 

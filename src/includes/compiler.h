@@ -31,6 +31,7 @@ typedef struct {
 // The expression itself
 struct Expr {
     ExprType type;
+    int plex;
     union {
         int64_t int_val;        // EXPR_INT
         int64_t char_val;       // EXPR_CHAR
@@ -62,11 +63,28 @@ struct Ret {
     int depth;
 };
 
+typedef struct Label{
+    Int64_Array *from;
+    Int64_Array *to;
+    int64_t offset;
+    int64_t index;
+} Label;
+
+typedef struct UnresolvedJmp {
+    Label *l;
+    size_t size;
+    size_t capacity;
+} UnresolvedJmp;
+
 Int64_Array *flow_segment;
 Int64_Array *label_segment;
+Int64_Array *constant_segment;
+Int64_Array *init_segment;
+UnresolveJmp *j;
 int64_t global_stackPos;
 int64_t stack_pointer;
 static size_t lambdacount = 0;
+static size_t ccount = 0;
 
 /*
  *  Function Declaration
@@ -89,6 +107,7 @@ void compile_mul(Expr *list, Env *env, Env *labelEnv, Int64_Array *segment);
 void compile_sub(Expr *list, Env *env, Env *labelEnv, Int64_Array *segment);
 void compile_le(Expr *list, Env *env, Env *labelEnv, Int64_Array *segment);
 void compile_eq(Expr *list, Env *env, Env *labelEnv, Int64_Array *segment);
+void compile_eqs(Expr *list, Env *env, Env *labelEnv, Int64_Array *segment); 
 // Local variables
 void compile_let(Expr *list, Env *env, Env *labelEnv, Int64_Array *segment);
 // conditionals
@@ -117,6 +136,11 @@ void funcall(Expr *list, Env *env, Env *labelEnv, Int64_Array *segment);
 void compile_var(Expr *list, Env *env, Env *labelEnv, Int64_Array *segment); 
 Expr* create_closure(Expr *list, Env *env, Env *labelEnv, int64_t entry);
 void tailcall(Expr *list, Env *env, Env *labelEnv, Int64_Array *segment);
+void ccconstant(Expr *list, Env *env, Env *labelEnv, Int64_Array *segment);
+Expr * create_complex_ref(int64_t loc);
+Expr *complex_init(Expr *list, int64_t loc);
+void compile_c_ref(Expr *list, Int64_Array *segment);
+void compile_c_init(Expr *list, Env *env, Env *labelEnv, Int64_Array *segment, int64_t loc);
 // Env
 Env *initializeEnv();
 void init_binding(Env *env, char *symbol);
@@ -146,7 +170,26 @@ Env* initializeEnv() {
     return env;
 }
 
+// typedef struct Label{
+//     Int64_Array *from;
+//     Int64_Array *to;
+//     int64_t offset;
+//     int64_t index;
+// };
+//
+// typedef struct UnresolvedJmp {
+//     Label *l;
+//     size_t size;
+//     size_t capacity;
+// };
 
+UnresolvedJmp *initializeJmp() {
+    UnresolvedJmp *j = malloc(sizeof(UnresolvedJmp));
+    j->size = 0;
+    j->capacity = 1;
+    j->l = calloc(j->capacity, sizeof(int64_t));
+    return j;
+}
 
 void inc_loc(Env *env) {
 
@@ -235,6 +278,12 @@ void init_binding(Env *env, char *symbol) {
     }
 }
 
+void addJ(UnresolvedJmp *j, Label l) {
+    if (j->size >= j->capacity) {
+        j->capacity = j->capacity * 2;
+
+        j->
+}
 
 
 void add_binding(Env *env, char *symbol, int64_t location) {
@@ -324,6 +373,14 @@ char* gen_lambdaName() {
     sprintf(str, "l%ld", lambdacount);
     lambdacount++;
     return str;
+}
+
+char* gen_ccName() {
+    char *str = malloc(64 * sizeof(char));
+    sprintf(str, "t%ld", ccount);
+    ccount++;
+    return str;
+
 }
 
 // add to list

@@ -17,6 +17,8 @@
 
 int64_t data;
 int64_t label_segment_entry;
+int64_t constant_segment_offset;
+int64_t init_segment_offset;
 int64_t instr;
 FILE *fp;
 size_t codes_read;

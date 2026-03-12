@@ -52,3 +52,10 @@
 (let ((b 2))
     (let ((a (lambda (y) (lambda () (+ y b)))))(funcall a 50))
         ()))
+
+
+
+        (let ((f (lambda () '(cons 1 2))))
+  (eq? (f) (f)))
+; expected: #t
+; both calls return SAME object!
