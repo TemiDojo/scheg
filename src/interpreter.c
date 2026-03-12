@@ -85,9 +85,9 @@ void interpret() {
             case BLEG: {
                 puts("BLEG");
                 read_word();
-
+                printf("env_pos: %ld\n", data);
                 int64_t env_pos = data;
-                env_pos = ((frame_pointer - 2) - env_pos);
+                env_pos = (frame_pointer - 1) - env_pos;
 
                 int64_t env_val = get(env_pos);
 
@@ -604,8 +604,10 @@ void interpret() {
             case HEG: {
                 puts("HEG");
 
-                uintptr_t clos = get(frame_pointer);
+                uintptr_t clos = get(untagInt(frame_pointer));
+                printf("fp: %ld\n", frame_pointer);
                 read_word(); 
+                printf("heg loc: %ld\n", data);
                 
                 if (!isClosure(clos)) {
                     puts("not a closure");
@@ -625,6 +627,8 @@ void interpret() {
                 puts("CLEG");
 
                 read_word();
+                printf("arg count: %ld\n", data);
+
                 uintptr_t arg = pop();
                 if (!isClosure(arg)) {
                     puts("not a closure");
@@ -636,23 +640,67 @@ void interpret() {
                 memcpy(&jump_loc, (char*)arg, sizeof(int64_t));  // ← use arg, not dum_ptr
                 jump_loc = (jump_loc * 8) + label_segment_entry;
 
-                push(frame_pointer);
-                frame_pointer = stack->size;
-                
+                stack->code[(stack->size -1)- data] = ftell(fp);
+
+                int64_t temp = stack->size; 
                 push(tagClosure(arg));
-                push(ftell(fp));
+
+                push(tagInt(frame_pointer));
+                frame_pointer = temp;
+
                 fseek(fp, jump_loc, SEEK_SET);
                 break;
                 }
+            case TAICLEG:
+                puts("TAICLEG");
+
+                uintptr_t arg = pop();
+                if (!isClosure(arg)) {
+                    puts("not a closure");
+                    exit(-2);
+                }
+
+                read_word();
+                
+                Int64_Array *copy = initializeInt64_arr();
+
+                for(int64_t i = 0; i < data; i++) {
+                    add_element(copy, pop());
+                }
+
+                read_word();
+                popN(data);
+
+                for(size_t i = copy->size; i > 0; i--) {
+                    push(copy->code[i-1]);
+                }
+                free(copy->code);
+                free(copy);
+
+                arg = untagClosure(arg);
+
+                memcpy(&jump_loc, (char*)arg, sizeof(int64_t));
+                jump_loc = (jump_loc * 8) + label_segment_entry;
+
+                int64_t temp = stack->size;
+                push(tagClosure(arg));
+
+                push(tagInt(frame_pointer));
+                frame_pointer = temp;
+
+                fseek(fp, jump_loc, SEEK_SET);
+                break;
             case RET:
                 puts("RET");
                 read_word();
 
                 res = pop();
-                int64_t ret_loc = pop();
-                pop(); // pop the closure
-                frame_pointer = pop();
+                pop(); // pop the framepointer
+                frame_pointer = untagInt(pop()); // pop the closure
                 popN(data);
+
+                int64_t ret_loc = pop();
+                printf("ret: %ld\n", ret_loc );
                 push(res);
                 fseek(fp, ret_loc, SEEK_SET);
                 break;
@@ -727,6 +775,7 @@ void print_res(int64_t res){
         char *ptr = ((char *) val);
         unroll_cons(ptr);
     } else if (isStr((uintptr_t) res)) {
+        puts("we getting a sring");
         int64_t str_size;
         uintptr_t val = untagStr((uintptr_t) res);
         char *ptr = ((char *) val);

@@ -265,11 +265,16 @@ void compile_list(Expr *list, Env *env, Env *labelEnv, Int64_Array *segment) {
     Expr *op = list->as.list.items[0];
     if (op->type == EXPR_LIST) {
 
+        add_element(segment, KEG);
+        add_element(segment, 0);
+        inc_loc(env);
+
         for(size_t i = 1; i < list->as.list.count; i++) {
             Compiler(list->as.list.items[i], env, labelEnv, segment);
         }
 
         Compiler(op, env, labelEnv, segment);
+        dec_loc(env);
         add_element(segment, CLEG);
         add_element(segment, list->as.list.count - 1);
 
@@ -369,6 +374,8 @@ void compile_list(Expr *list, Env *env, Env *labelEnv, Int64_Array *segment) {
 
     } else if (strcmp(op_name, "funcall") == 0) {
         funcall(list, env, labelEnv, segment);
+    } else if (strcmp(op_name, "tailcall") == 0) {
+        tailcall(list, env, labelEnv, segment);
     } else {
         char *symbol = strdup(op_name);
         int64_t lkId = lookup(labelEnv, symbol);
@@ -663,6 +670,7 @@ void compile_if(Expr *list, Env *env, Env *labelEnv, Int64_Array *segment) {
 
     // emit test bool val
     Compiler(test, env, labelEnv, segment);
+    dec_loc(env);
     add_element(segment, cJEG); // jump opcode
                                     // 
     size_t idx = flow_segment->size;
@@ -671,6 +679,7 @@ void compile_if(Expr *list, Env *env, Env *labelEnv, Int64_Array *segment) {
 
     // emit l1 label consequent
     Compiler(conseq, env, labelEnv, segment);
+    dec_loc(env);
     // emit jump to end of if
     add_element(segment, JEG); // jump opcode
     size_t idx2 = flow_segment->size;
@@ -679,6 +688,7 @@ void compile_if(Expr *list, Env *env, Env *labelEnv, Int64_Array *segment) {
     // if false jump to altern
     int64_t l0_label = flow_segment->size;
     Compiler(altern, env, labelEnv, segment);
+    dec_loc(env);
     // emit cjump to l0
     add_at_index(flow_segment, l0_label, idx);
     // emit jump to end of if
@@ -1059,6 +1069,10 @@ void compile_closure(Expr *list, Env *env, Env *labelEnv, Int64_Array *segment) 
  */
 void funcall(Expr *list, Env *env, Env *labelEnv, Int64_Array *segment) {
 
+    add_element(segment, KEG);
+    add_element(segment, 0);
+    inc_loc(env);
+
     for(size_t i = 2; i < list->as.list.count; i++) {
         Expr *args = list->as.list.items[i];
         Compiler(args, env, labelEnv, segment);
@@ -1083,6 +1097,11 @@ void funcall(Expr *list, Env *env, Env *labelEnv, Int64_Array *segment) {
  */
 void compile_var(Expr *list, Env *env, Env *labelEnv, Int64_Array *segment) {
 
+    add_element(segment, KEG);
+    add_element(segment, 0);
+    inc_loc(env);
+
+
     for(size_t i = 1; i < list->as.list.count; i++) {
         Expr *args = list->as.list.items[i];
         Compiler(args, env, labelEnv, segment);
@@ -1093,6 +1112,8 @@ void compile_var(Expr *list, Env *env, Env *labelEnv, Int64_Array *segment) {
 
     add_element(segment, CLEG);
     add_element(segment, list->as.list.count-1);
+    dec_loc(env);
+
 
     for(size_t i = 1; i < list->as.list.count; i++) {
         dec_loc(env);
@@ -1101,3 +1122,40 @@ void compile_var(Expr *list, Env *env, Env *labelEnv, Int64_Array *segment) {
     inc_loc(env);
 
 }
+
+/*
+ * tail call
+ */
+void tailcall(Expr *list, Env *env, Env *labelEnv, Int64_Array *segment) {
+
+    // check the env to see how many local vars
+    size_t loc = count_loc(env);
+
+    for(size_t i = 2; i < list->as.list.count; i++) {
+        Expr *args = list->as.list.items[i];
+        Compiler(args, env, labelEnv, segment);
+    }
+
+    for(size_t i = 0; i < loc; i++) {
+        dec_loc(env);
+    }
+
+    Expr *arg = list->as.list.items[1];
+    Compiler(arg, env, labelEnv, segment);
+    dec_loc(env);
+
+    add_element(segment, TAICLEG);
+    add_element(segment, list->as.list.count-2);
+    add_element(segment, loc);
+
+
+
+    for(size_t i = 2; i < list->as.list.count; i++) {
+        dec_loc(env);
+    }
+    dec_loc(env);
+    inc_loc(env);
+
+}
+
+
